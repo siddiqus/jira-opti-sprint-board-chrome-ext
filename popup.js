@@ -1,24 +1,32 @@
-// Initialize button with users' preferred color
-const changeColor = document.getElementById('changeColor');
+const enableHoursDisplayBtn = document.getElementById("enableHoursDisplay");
+const disableHoursDisplayBtn = document.getElementById("disableHoursDisplay");
 
-chrome.storage.sync.get('color', ({ color }) => {
-  changeColor.style.backgroundColor = color;
-});
+// Set initial state based on local storage
+async function loadHoursDisplayFlagDefault() {
+  const isHoursEnabled = await localStorageService.get(
+    options.flags.HOURS_IN_STATUS_ENABLED
+  );
 
-// When the button is clicked, inject setPageBackgroundColor into current page
-changeColor.addEventListener('click', async () => {
-  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-  chrome.scripting.executeScript({
-    target: { tabId: tab.id },
-    func: setPageBackgroundColor
-  });
-});
-
-// The body of this function will be executed as a content script inside the
-// current page
-function setPageBackgroundColor() {
-  chrome.storage.sync.get('color', ({ color }) => {
-    document.body.style.backgroundColor = color;
-  });
+  if (isHoursEnabled) {
+    enableHoursDisplayBtn.checked = true;
+  } else {
+    disableHoursDisplayBtn.checked = true;
+  }
 }
+
+(async function onLoad() {
+  await loadHoursDisplayFlagDefault();
+})();
+
+// Add event listeners
+enableHoursDisplayBtn.addEventListener("change", function () {
+  if (enableHoursDisplayBtn.checked) {
+    localStorageService.set(options.flags.HOURS_IN_STATUS_ENABLED, true);
+  }
+});
+
+disableHoursDisplayBtn.addEventListener("change", function () {
+  if (disableHoursDisplayBtn.checked) {
+    localStorageService.set(options.flags.HOURS_IN_STATUS_ENABLED, false);
+  }
+});

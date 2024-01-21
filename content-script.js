@@ -47,7 +47,7 @@ const Utils = {
   getHtmlFromString: (htmlString) => {
     const tempContainer = document.createElement("div");
     tempContainer.innerHTML = htmlString;
-    return tempContainer;
+    return tempContainer.firstChild;
   },
 };
 
@@ -163,7 +163,7 @@ async function enhanceSprintBoard() {
     return issueData.filter((f) => !["To Do"].includes(f.status) && !f.isDone);
   }
 
-  function highlightInProgressIssues(issueData) {
+  function highlightInProgressIssuesHoursElapsed(issueData) {
     const cards = [...document.getElementsByClassName("ghx-issue")];
 
     const htmlCardMap = cards.reduce((obj, card) => {
@@ -174,6 +174,9 @@ async function enhanceSprintBoard() {
 
     for (const issue of issueData) {
       const htmlCard = htmlCardMap[issue.issueKey];
+      if (!htmlCard) {
+        continue;
+      }
 
       const parentClass = "ghx-card-footer";
       const endDivClass = "ghx-days";
@@ -229,6 +232,10 @@ async function enhanceSprintBoard() {
     const htmlElem = Utils.getHtmlFromString(htmlString);
 
     const headerElem = document.querySelector(SPRINT_HEADER_ID);
+
+    if (!headerElem) {
+      return;
+    }
 
     const existingElem = headerElem.querySelector(newElementSelector);
     if (!existingElem) {
@@ -331,7 +338,7 @@ async function enhanceSprintBoard() {
     appendHtmlStringToHeader(`#${elementId}`, htmlString);
   }
 
-  function showStatusColumnCounts(boardData, issueData) {
+  function showStatusColumnCounts(issueData) {
     const statusCountMap = issueData.reduce((map, issue) => {
       if (map[issue.status.toUpperCase()]) {
         map[issue.status.toUpperCase()]++;
@@ -360,8 +367,15 @@ async function enhanceSprintBoard() {
   const boardData = await Utils.getFromUrl(boardUrl);
   const issueData = getMappedIssueData(boardData);
 
-  showStatusColumnCounts(boardData, issueData);
-  highlightInProgressIssues(getInProgressIssues(issueData));
+  showStatusColumnCounts(issueData);
+
+  if (await localStorageService.get(options.flags.HOURS_IN_STATUS_ENABLED)) {
+    highlightInProgressIssuesHoursElapsed(getInProgressIssues(issueData));
+  } else {
+    [...document.getElementsByClassName(TIME_ELAPSED_CLASS_NAME)].forEach((q) =>
+      q.remove()
+    );
+  }
 
   // for headers, these will be shown in the reverse order
   populateReviewerData(getReviewerData(issueData));
@@ -402,7 +416,7 @@ async function enhanceBacklog() {
     });
   }
 
-  function refreshPointCount(element, event) {
+  function refreshPointCount(element) {
     clearAllTotalCounts();
 
     const backlogId = element.querySelector(".ghx-name").innerText;
@@ -431,11 +445,6 @@ async function enhanceBacklog() {
 
     const existingElem = document.getElementById(totalPointsElementId);
 
-    // if (!totalPoints) {
-    //     existingElem.remove()
-    //     return;
-    // }
-
     if (existingElem) {
       existingElem.innerText = totalPointsElem.innerText;
     } else {
@@ -446,24 +455,41 @@ async function enhanceBacklog() {
   const issuesLists = [...document.querySelectorAll(".ghx-backlog-container")];
 
   issuesLists.forEach((issueList) => {
-    issueList.addEventListener("click", async function (event) {
+    issueList.addEventListener("click", async function (_event) {
       await Utils.delay(100);
       // to give time for the selected class to be appended
-      refreshPointCount(this, event);
+      try {
+        refreshPointCount(this);
+      } catch (error) {
+        console.error(error);
+      }
     });
   });
 }
 
-function loop(fn) {
-  fn();
-  setInterval(() => {
-    fn();
-  }, 2000);
+async function setDefaults() {
+  if (
+    [undefined, null].includes(
+      await localStorageService.get(options.flags.HOURS_IN_STATUS_ENABLED)
+    )
+  ) {
+    localStorageService.set(options.flags.HOURS_IN_STATUS_ENABLED, true);
+  }
 }
 
 async function run() {
+  setDefaults();
+
   await enhanceSprintBoard();
   await enhanceBacklog();
+}
+
+async function loop(fn) {
+  await fn();
+
+  setInterval(async () => {
+    await fn();
+  }, 2000);
 }
 
 loop(run);

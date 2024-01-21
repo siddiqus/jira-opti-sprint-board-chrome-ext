@@ -26,11 +26,10 @@
   "content_scripts": [
     {
       "matches": ["https://jira.sso.episerver.net/*"],
-      "js": ["content-script.js"],
+      "js": ["constants.js", "content-script.js"],
       "all_frames": false,
       "match_origin_as_fallback": false,
-      "match_about_blank": false,
-      "world": "ISOLATED"
+      "match_about_blank": false
     }
   ]
 }

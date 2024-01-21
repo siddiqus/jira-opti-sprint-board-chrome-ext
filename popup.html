@@ -1,10 +1,34 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <link rel="stylesheet" href="button.css" />
-  </head>
-  <body>
-    <button id="changeColor"></button>
-    <script src="popup.js"></script>
-  </body>
+
+<head>
+  <link rel="stylesheet" href="assets/styles/popup.css" />
+  <script src="constants.js"></script>
+</head>
+
+<body>
+  <h3>JIRA Chrome Plugin</h3>
+  <hr />
+  <table id="jira-chrome-plugin-options-table">
+    <tbody>
+      <tr>
+        <td>
+          Show hours in column:
+        </td>
+        <td>
+          <label for="enabledRadio">
+            <input type="radio" id="enableHoursDisplay" name="status" value="enabled"> Enabled
+          </label>
+        </td>
+        <td>
+          <label for="disabledRadio">
+            <input type="radio" id="disableHoursDisplay" name="status" value="disabled"> Disabled
+          </label>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <script src="popup.js"></script>
+</body>
+
 </html>
