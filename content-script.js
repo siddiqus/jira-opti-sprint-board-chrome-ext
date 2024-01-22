@@ -251,7 +251,7 @@ async function enhanceSprintBoard() {
     const htmlGenerator = (epic) => {
       return `<span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}"> ${epic.epicName} (${epic.doneCount}/${epic.totalCount}) </span>`;
     };
-    let htmlString = `<div id="ghx-header-epic-counts"> <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}">EPICS:</span> `;
+    let htmlString = `<div id="ghx-header-epic-counts" style="padding-top:5px;"> <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}">EPICS:</span> `;
 
     epicCompletionData.sort((a, b) => b.totalCount - a.totalCount);
 
