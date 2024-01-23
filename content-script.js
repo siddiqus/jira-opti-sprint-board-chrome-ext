@@ -404,15 +404,16 @@ async function enhanceSprintBoard() {
 }
 
 async function enhanceBacklog() {
-  if (window.ENHANCE_BACKLOG_LISTENERS_IS_ACTIVE) {
+  const issuesLists = [...document.querySelectorAll(".ghx-backlog-container")];
+
+  if (!issuesLists.length) {
     return;
   }
-  window.ENHANCE_BACKLOG_LISTENERS_IS_ACTIVE = 1;
 
   const urlParams = new URLSearchParams(window.location.search);
 
   const view = urlParams.get("view") || "";
-  if (!view.includes('planning')) {
+  if (!view.includes("planning")) {
     return;
   }
 
@@ -472,8 +473,6 @@ async function enhanceBacklog() {
     }
   }
 
-  const issuesLists = [...document.querySelectorAll(".ghx-backlog-container")];
-
   issuesLists.forEach((issueList) => {
     issueList.addEventListener("click", async function (_event) {
       await Utils.delay(100);
@@ -485,6 +484,8 @@ async function enhanceBacklog() {
       }
     });
   });
+
+  window.ENHANCE_BACKLOG_LISTENERS_IS_ACTIVE = 1;
 }
 
 async function setDefaults() {
