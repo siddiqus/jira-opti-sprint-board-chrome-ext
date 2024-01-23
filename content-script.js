@@ -423,6 +423,7 @@ async function enhanceBacklog() {
   right: 0;
   padding-right: 25px;
   padding-bottom: 12px;
+  padding-top: 30px;
 ">(Total Points: ${points})</div>`;
 
     return Utils.getHtmlFromString(str);
