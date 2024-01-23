@@ -412,7 +412,7 @@ async function enhanceBacklog() {
   const urlParams = new URLSearchParams(window.location.search);
 
   const view = urlParams.get("view") || "";
-  if (view !== "planning") {
+  if (!view.includes('planning')) {
     return;
   }
 
