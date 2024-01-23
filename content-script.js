@@ -340,23 +340,35 @@ async function enhanceSprintBoard() {
 
   function showStatusColumnCounts(issueData) {
     const statusCountMap = issueData.reduce((map, issue) => {
-      if (map[issue.status.toUpperCase()]) {
-        map[issue.status.toUpperCase()]++;
+      const status = issue.status.toUpperCase();
+      if (map[status]) {
+        map[status]++;
       } else {
-        map[issue.status.toUpperCase()] = 1;
+        map[status] = 1;
       }
       return map;
     }, {});
+
+    function sanitizeProductReviewHeading(header) {
+      // for team 7 board
+      const upperCaseHeader = header.toUpperCase();
+      return upperCaseHeader.includes("PRODUCT") &&
+        upperCaseHeader.includes("REVIEW")
+        ? "PRODUCT REVIEW"
+        : upperCaseHeader;
+    }
 
     const columnHeaders = [
       ...document.querySelectorAll(".ghx-column-headers .ghx-column"),
     ];
     columnHeaders.forEach((headerElement) => {
       const headerTitleElem = headerElement.querySelector(".ghx-column-title");
-      const columnStatus = headerTitleElem.innerText
+      let columnStatus = headerTitleElem.innerText
         .trim()
         .toUpperCase()
         .split(" (")[0];
+
+      columnStatus = sanitizeProductReviewHeading(columnStatus);
       const statusCount = statusCountMap[columnStatus];
       const newDisplayText = `${columnStatus} (${statusCount || 0})`;
       headerTitleElem.innerText = newDisplayText;
