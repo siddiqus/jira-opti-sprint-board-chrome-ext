@@ -376,7 +376,15 @@ async function enhanceSprintBoard() {
   }
 
   const boardUrl = getBoardUrl(baseUrl, rapidViewId);
-  const boardData = await Utils.getFromUrl(boardUrl);
+
+  let boardData;
+  try {
+    boardData = await Utils.getFromUrl(boardUrl);
+  } catch (error) {
+    console.log(`Failed fetching board data`, error);
+    return;
+  }
+
   const issueData = getMappedIssueData(boardData);
 
   showStatusColumnCounts(issueData);
