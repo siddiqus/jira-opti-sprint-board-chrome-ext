@@ -73,6 +73,10 @@ async function enhanceSprintBoard() {
   }
 
   function getReviewersFromHtml(theIssue) {
+    if (!theIssue.extraFields) {
+      return [];
+    }
+
     const reviewers = theIssue.extraFields.find(
       (f) => f.label === "Code Reviewers"
     );
@@ -105,7 +109,7 @@ async function enhanceSprintBoard() {
 
     const mappedIssues = issues.map((issue) => {
       const issueKey = issue.key;
-      const assignee = issue.assigneeName;
+      const assignee = issue.assigneeName || "Unassigned";
       const epicName = getEpicNameFromId(epics, issue.epicId);
 
       const storyPoints = +issue.estimateStatistic.statFieldValue.value;
@@ -274,7 +278,16 @@ async function enhanceSprintBoard() {
         },
       ];
     }, []);
-    dataArray.sort((a, b) => b.count - a.count);
+
+    dataArray.sort((a, b) => {
+      if (a.name === "Unassigned") {
+        return -1;
+      } else if (b.name === "Unassigned") {
+        return 1;
+      } else {
+        return b.count - a.count;
+      }
+    });
 
     const htmlGenerator = (asigneeName, assigneeTasks) => {
       return `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${headerStatsFontSize}"> ${asigneeName}: ${assigneeTasks} </span>`;
