@@ -20,6 +20,7 @@ async function loadHoursDisplayFlagDefault() {
 
 // Add event listeners
 enableHoursDisplayBtn.addEventListener("change", function () {
+  alert('hello')
   if (enableHoursDisplayBtn.checked) {
     localStorageService.set(options.flags.HOURS_IN_STATUS_ENABLED, true);
   }

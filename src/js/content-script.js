@@ -388,32 +388,73 @@ async function enhanceSprintBoard() {
     });
   }
 
-  const boardUrl = getBoardUrl(baseUrl, rapidViewId);
+  function renderProgressBar(issueData) {
+    if (!issueData.length) {
+      return;
+    }
+    const parent = document.querySelector("#ghx-modes-tools");
 
-  let boardData;
-  try {
-    boardData = await Utils.getFromUrl(boardUrl);
-  } catch (error) {
-    console.log(`Failed fetching board data`, error);
-    return;
+    const doneCount = issueData.filter((i) => i.isDone).length;
+    const totalCount = issueData.length;
+
+    const percentage =
+      totalCount > 0 ? Math.round((100 * doneCount) / totalCount) : 0;
+
+    const progressBarId = "ghx-sprint-progress-bar-container";
+
+    const progressBarHtmlString = `<div id="${progressBarId}" style="float:left; margin-left: 20px; margin-right: 20px; width: 200px; height: 30px; position: relative; display: inline-block;">
+        <progress id="ghx-progressBar" value="${percentage}" max="100" style="width: 200px; height: 32px;"></progress>
+        <span style="position: absolute; font-size: 10px; color: #666; left: 33%; top: 30%; font-weight: bold; width: 80px; text-align: center;">
+            ${doneCount} / ${totalCount} points
+        </span>
+    </div>`;
+
+    const progressBarHtml = Utils.getHtmlFromString(progressBarHtmlString);
+
+    const existingElem = document.getElementById(progressBarId);
+
+    if (existingElem) {
+      existingElem.innerHTML = progressBarHtml.innerHTML;
+    } else {
+      const firstChild = parent.querySelector(".ghx-sprint-meta");
+      if (firstChild) {
+        parent.insertBefore(progressBarHtml, firstChild);
+      }
+    }
   }
 
-  const issueData = getMappedIssueData(boardData);
+  async function run() {
+    const boardUrl = getBoardUrl(baseUrl, rapidViewId);
 
-  showStatusColumnCounts(issueData);
+    let boardData;
+    try {
+      boardData = await Utils.getFromUrl(boardUrl);
+    } catch (error) {
+      console.log(`Failed fetching board data`, error);
+      return;
+    }
 
-  if (await localStorageService.get(options.flags.HOURS_IN_STATUS_ENABLED)) {
-    highlightInProgressIssuesHoursElapsed(getInProgressIssues(issueData));
-  } else {
-    [...document.getElementsByClassName(TIME_ELAPSED_CLASS_NAME)].forEach((q) =>
-      q.remove()
-    );
+    const issueData = getMappedIssueData(boardData);
+
+    showStatusColumnCounts(issueData);
+
+    renderProgressBar(issueData);
+
+    if (await localStorageService.get(options.flags.HOURS_IN_STATUS_ENABLED)) {
+      highlightInProgressIssuesHoursElapsed(getInProgressIssues(issueData));
+    } else {
+      [...document.getElementsByClassName(TIME_ELAPSED_CLASS_NAME)].forEach(
+        (q) => q.remove()
+      );
+    }
+
+    // for headers, these will be shown in the reverse order
+    populateReviewerData(getReviewerData(issueData));
+    populateAssigneeData(Utils.groupBy(issueData, "assignee"));
+    populateEpicCompletionData(getEpicCompletionData(issueData));
   }
 
-  // for headers, these will be shown in the reverse order
-  populateReviewerData(getReviewerData(issueData));
-  populateAssigneeData(Utils.groupBy(issueData, "assignee"));
-  populateEpicCompletionData(getEpicCompletionData(issueData));
+  await run();
 }
 
 async function enhanceBacklog() {
