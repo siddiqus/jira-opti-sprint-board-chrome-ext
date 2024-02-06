@@ -252,6 +252,9 @@ async function enhanceSprintBoard() {
   const headerStatsFontSize = "11px";
 
   function populateEpicCompletionData(epicCompletionData) {
+    if (!epicCompletionData.length) {
+      return;
+    }
     const htmlGenerator = (epic) => {
       return `<span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}"> ${epic.epicName} (${epic.doneCount}/${epic.totalCount}) </span>`;
     };
@@ -278,6 +281,10 @@ async function enhanceSprintBoard() {
         },
       ];
     }, []);
+
+    if (!dataArray.length) {
+      return;
+    }
 
     dataArray.sort((a, b) => {
       if (a.name === "Unassigned") {
@@ -333,6 +340,10 @@ async function enhanceSprintBoard() {
         },
       ];
     }, []);
+
+    if (!dataArray.length) {
+      return;
+    }
 
     dataArray.sort((a, b) => b.count - a.count);
 
@@ -403,11 +414,11 @@ async function enhanceSprintBoard() {
     const progressBarId = "ghx-sprint-progress-bar-container";
 
     const progressBarHtmlString = `<div id="${progressBarId}" style="float:left; margin-left: 20px; margin-right: 20px; width: 200px; height: 30px; position: relative; display: inline-block;">
-        <progress id="ghx-progressBar" value="${percentage}" max="100" style="width: 200px; height: 32px;"></progress>
-        <span style="position: absolute; font-size: 10px; color: #666; left: 33%; top: 30%; font-weight: bold; width: 80px; text-align: center;">
-            ${doneCount} / ${totalCount} points
-        </span>
-    </div>`;
+          <progress id="ghx-progressBar" value="${percentage}" max="100" style="width: 200px; height: 32px;"></progress>
+          <span style="position: absolute; font-size: 10px; color: #666; left: 33%; top: 30%; font-weight: bold; width: 80px; text-align: center;">
+              ${doneCount} / ${totalCount} points
+          </span>
+      </div>`;
 
     const progressBarHtml = Utils.getHtmlFromString(progressBarHtmlString);
 
@@ -421,6 +432,60 @@ async function enhanceSprintBoard() {
         parent.insertBefore(progressBarHtml, firstChild);
       }
     }
+  }
+
+  function getReviewerPairs(issuesData) {
+    const pairCounts = {};
+
+    issuesData.forEach((issue) => {
+      if (issue.assignee && issue.reviewers && issue.reviewers.length > 0) {
+        issue.reviewers.forEach((reviewer) => {
+          const pair = [issue.assignee, reviewer].sort().join("-");
+          pairCounts[pair] = (pairCounts[pair] || 0) + 1;
+        });
+      }
+    });
+
+    return pairCounts;
+  }
+
+  function populateReviewerPairData(issuesData) {
+    if (!issuesData.length) {
+      return;
+    }
+
+    const pairCounts = getReviewerPairs(issuesData);
+
+    const dataArray = Object.keys(pairCounts).reduce((obj, pair) => {
+      const [p1, p2] = pair.split("-").map((p) => p.split(" ").shift()); // first names only
+      const count = pairCounts[pair];
+      const newPair = {
+        p1,
+        p2,
+        count,
+      };
+      return [...obj, newPair];
+    }, []);
+
+    dataArray.sort((a, b) => b.count - a.count);
+
+    const htmlGenerator = (pairData) => {
+      return `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${headerStatsFontSize}">
+      ${pairData.p1} + ${pairData.p2} (${pairData.count})
+    </span>`;
+    };
+    const elementId = "ghx-header-reviewer-pairs-counts";
+    let htmlString = `<div id="${elementId}">
+    <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}">REVIEW PAIRS:</span>
+  `;
+
+    for (const pairData of dataArray) {
+      const epicHtml = htmlGenerator(pairData);
+      htmlString += epicHtml;
+    }
+    htmlString += "</div>";
+
+    appendHtmlStringToHeader(`#${elementId}`, htmlString);
   }
 
   async function run() {
@@ -449,6 +514,7 @@ async function enhanceSprintBoard() {
     }
 
     // for headers, these will be shown in the reverse order
+    populateReviewerPairData(issueData);
     populateReviewerData(getReviewerData(issueData));
     populateAssigneeData(Utils.groupBy(issueData, "assignee"));
     populateEpicCompletionData(getEpicCompletionData(issueData));
@@ -473,11 +539,11 @@ async function enhanceBacklog() {
 
   function getTotalPointsHtmlElement(elementId, points) {
     const str = `<div id="${elementId}" style="
-  position: absolute;
-  right: 0;
-  padding-right: 25px;
-  padding-bottom: 12px;
-  padding-top: 30px;
+position: absolute;
+right: 0;
+padding-right: 25px;
+padding-bottom: 12px;
+padding-top: 30px;
 ">(Total Points: ${points})</div>`;
 
     return Utils.getHtmlFromString(str);
