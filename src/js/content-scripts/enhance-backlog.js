@@ -1,5 +1,6 @@
+// eslint-disable-next-line
 async function enhanceBacklog() {
-  const issuesLists = [...document.querySelectorAll(".ghx-backlog-container")];
+  const issuesLists = [...document.querySelectorAll('.ghx-backlog-container')];
 
   if (!issuesLists.length) {
     return;
@@ -7,8 +8,8 @@ async function enhanceBacklog() {
 
   const urlParams = new URLSearchParams(window.location.search);
 
-  const view = urlParams.get("view") || "";
-  if (!view.includes("planning")) {
+  const view = urlParams.get('view') || '';
+  if (!view.includes('planning')) {
     return;
   }
 
@@ -25,9 +26,7 @@ async function enhanceBacklog() {
   }
 
   function clearAllTotalCounts() {
-    const elements = [
-      ...document.querySelectorAll('[id$="_totalPointsElement"]'),
-    ];
+    const elements = [...document.querySelectorAll('[id$="_totalPointsElement"]')];
     elements.forEach((e) => {
       e.remove();
     });
@@ -36,41 +35,31 @@ async function enhanceBacklog() {
   function refreshPointCount(element) {
     clearAllTotalCounts();
 
-    const backlogId = element.querySelector(".ghx-name").innerText;
+    const backlogId = element.querySelector('.ghx-name').innerText;
 
-    const totalPointsElementId = `${backlogId}_totalPointsElement`.replace(
-      /\s/g,
-      "_"
-    );
+    const totalPointsElementId = `${backlogId}_totalPointsElement`.replace(/\s/g, '_');
 
-    const selectedIssues = [
-      ...element.querySelectorAll(".js-issue.ghx-selected"),
-    ];
+    const selectedIssues = [...element.querySelectorAll('.js-issue.ghx-selected')];
 
     const totalPoints = selectedIssues.reduce((sum, issue) => {
-      const countElem = issue.querySelector(
-        ".ghx-estimate .ghx-statistic-badge"
-      );
+      const countElem = issue.querySelector('.ghx-estimate .ghx-statistic-badge');
       const count = +countElem.innerText;
       return sum + count;
     }, 0);
 
-    const totalPointsElem = getTotalPointsHtmlElement(
-      totalPointsElementId,
-      totalPoints
-    );
+    const totalPointsElem = getTotalPointsHtmlElement(totalPointsElementId, totalPoints);
 
     const existingElem = document.getElementById(totalPointsElementId);
 
     if (existingElem) {
       existingElem.innerText = totalPointsElem.innerText;
     } else {
-      element.querySelector(".ghx-sprint-info").appendChild(totalPointsElem);
+      element.querySelector('.ghx-sprint-info').appendChild(totalPointsElem);
     }
   }
 
   issuesLists.forEach((issueList) => {
-    issueList.addEventListener("click", async function (_event) {
+    issueList.addEventListener('click', async () => {
       await Utils.delay(100);
       // to give time for the selected class to be appended
       try {

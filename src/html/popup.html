@@ -1,53 +1,51 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
+  <head>
+    <link rel="stylesheet" href="../styles/popup.css" />
+    <script src="../js/common/constants.js"></script>
+  </head>
 
-<head>
-  <link rel="stylesheet" href="../styles/popup.css" />
-  <script src="../js/common/constants.js"></script>
-</head>
-
-<body style="width: 400px">
-  <h3>JIRA Chrome Plugin</h3>
-  <hr />
-  <table id="jira-chrome-plugin-options-table">
-    <tbody>
-      <tr>
-        <form>
-          <td>
-            Show hours in column:
-          </td>
-          <td>
-            <label for="enabledRadio">
-              <input type="radio" id="enableHoursDisplay" name="status" value="enabled"> Enabled
-            </label>
-          </td>
-          <td>
-            <label for="disabledRadio">
-              <input type="radio" id="disableHoursDisplay" name="status" value="disabled"> Disabled
-            </label>
-          </td>
-        </form>
-      </tr>
-      <tr>
-        <form>
-          <td>
-            Show review pairs
-          </td>
-          <td>
-            <label for="enabledRadio">
-              <input type="radio" id="enableReviewPairs" name="status" value="enabled"> Enabled
-            </label>
-          </td>
-          <td>
-            <label for="disabledRadio">
-              <input type="radio" id="disableReviewPairs" name="status" value="disabled"> Disabled
-            </label>
-          </td>
-        </form>
-      </tr>
-    </tbody>
-  </table>
-  <script src="../js/popup/popup.js"></script>
-</body>
-
+  <body style="width: 400px">
+    <h3>JIRA Chrome Plugin</h3>
+    <hr />
+    <table id="jira-chrome-plugin-options-table">
+      <tbody>
+        <tr>
+          <form>
+            <td>Show hours in column:</td>
+            <td>
+              <label for="enabledRadio">
+                <input type="radio" id="enableHoursDisplay" name="status" value="enabled" />
+                Enabled
+              </label>
+            </td>
+            <td>
+              <label for="disabledRadio">
+                <input type="radio" id="disableHoursDisplay" name="status" value="disabled" />
+                Disabled
+              </label>
+            </td>
+          </form>
+        </tr>
+        <tr>
+          <form>
+            <td>Show review pairs</td>
+            <td>
+              <label for="enabledRadio">
+                <input type="radio" id="enableReviewPairs" name="status" value="enabled" />
+                Enabled
+              </label>
+            </td>
+            <td>
+              <label for="disabledRadio">
+                <input type="radio" id="disableReviewPairs" name="status" value="disabled" />
+                Disabled
+              </label>
+            </td>
+          </form>
+        </tr>
+      </tbody>
+    </table>
+    <script src="../js/popup/popup.js"></script>
+  </body>
 </html>
