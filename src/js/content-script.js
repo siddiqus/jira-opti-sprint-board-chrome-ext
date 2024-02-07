@@ -243,7 +243,7 @@ async function enhanceSprintBoard() {
 
     const existingElem = headerElem.querySelector(newElementSelector);
     if (!existingElem) {
-      headerElem.insertBefore(htmlElem, headerElem.firstChild);
+      headerElem.appendChild(htmlElem);
     } else {
       existingElem.innerHTML = htmlElem.innerHTML;
     }
@@ -403,7 +403,7 @@ async function enhanceSprintBoard() {
     if (!issueData.length) {
       return;
     }
-    const parent = document.querySelector("#ghx-modes-tools");
+    const parent = document.querySelector(".ghx-sprint-meta");
 
     const doneCount = issueData.filter((i) => i.isDone).length;
     const totalCount = issueData.length;
@@ -423,14 +423,11 @@ async function enhanceSprintBoard() {
     const progressBarHtml = Utils.getHtmlFromString(progressBarHtmlString);
 
     const existingElem = document.getElementById(progressBarId);
-
     if (existingElem) {
-      existingElem.innerHTML = progressBarHtml.innerHTML;
-    } else {
-      const firstChild = parent.querySelector(".ghx-sprint-meta");
-      if (firstChild) {
-        parent.insertBefore(progressBarHtml, firstChild);
-      }
+      existingElem.remove();
+    }
+    if (parent) {
+      parent.insertBefore(progressBarHtml, parent.firstChild);
     }
   }
 
@@ -514,10 +511,14 @@ async function enhanceSprintBoard() {
     }
 
     // for headers, these will be shown in the reverse order
-    populateReviewerPairData(issueData);
-    populateReviewerData(getReviewerData(issueData));
-    populateAssigneeData(Utils.groupBy(issueData, "assignee"));
     populateEpicCompletionData(getEpicCompletionData(issueData));
+    populateAssigneeData(Utils.groupBy(issueData, "assignee"));
+    populateReviewerData(getReviewerData(issueData));
+    if (
+      await localStorageService.get(options.flags.SHOW_REVIEW_PAIRS_ENABLED)
+    ) {
+      populateReviewerPairData(issueData);
+    }
   }
 
   await run();
@@ -616,6 +617,14 @@ async function setDefaults() {
     )
   ) {
     localStorageService.set(options.flags.HOURS_IN_STATUS_ENABLED, true);
+  }
+
+  if (
+    [undefined, null].includes(
+      await localStorageService.get(options.flags.SHOW_REVIEW_PAIRS_ENABLED)
+    )
+  ) {
+    localStorageService.set(options.flags.SHOW_REVIEW_PAIRS_ENABLED, false);
   }
 }
 
