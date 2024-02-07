@@ -11,25 +11,11 @@ const options = {
 };
 
 const localStorageService = (() => {
-  function detectBrowser() {
-    if (typeof chrome !== 'undefined' && chrome.runtime) {
-      // Check if the browser is Microsoft Edge by looking for the 'msBrowser' property
-      if (navigator.userAgent.indexOf('Edg') !== -1 || 'msBrowser' in chrome.runtime) {
-        return 'Edge';
-      }
-      return 'Chrome';
-    }
-    // If the chrome object is not present or lacks the runtime property, it's not a Chromium-based browser
-    return 'Unknown';
-  }
-
-  const syncVariableForBrowser = detectBrowser() === 'Edge' ? 'sync2' : 'sync';
-
-  return {
+   return {
     get: async (key) =>
-      chrome.storage[syncVariableForBrowser].get([key]).then((result) => result[key]),
+      chrome.storage.sync.get([key]).then((result) => result[key]),
     set: (key, value) => {
-      chrome.storage[syncVariableForBrowser].set({ [key]: value });
+      chrome.storage.sync.set({ [key]: value });
     },
   };
 })();
