@@ -17,8 +17,11 @@
         "https://jira.sso.episerver.net/*"
       ],
       "js": [
-        "src/js/constants.js",
-        "src/js/content-script.js"
+        "src/js/common/constants.js",
+        "src/js/common/utils.js",
+        "src/js/content-scripts/enhance-sprint-board.js",
+        "src/js/content-scripts/enhance-backlog.js",
+        "src/js/run.js"
       ],
       "all_frames": false,
       "match_origin_as_fallback": false,

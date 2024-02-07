@@ -1,56 +1,3 @@
-const SPRINT_HEADER_ID = "#ghx-column-header-group";
-const TIME_ELAPSED_CLASS_NAME = "ghx-issue-time-elapsed";
-
-const Utils = {
-  delay: async (ms) => {
-    return new Promise((res) => setTimeout(res, ms));
-  },
-  groupBy: (collection, iteratee) => {
-    return collection.reduce((result, item) => {
-      const key =
-        typeof iteratee === "function" ? iteratee(item) : item[iteratee];
-
-      if (!result[key]) {
-        result[key] = [];
-      }
-
-      result[key].push(item);
-      return result;
-    }, {});
-  },
-  getFromUrl: async (apiUrl) => {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-
-      xhr.withCredentials = true;
-      // Include credentials (cookies) in the request
-
-      xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-          if (xhr.status === 200) {
-            try {
-              const data = JSON.parse(xhr.responseText);
-              resolve(data);
-            } catch (error) {
-              reject(new Error("Error parsing JSON response"));
-            }
-          } else {
-            reject(new Error(`HTTP error! Status: ${xhr.status}`));
-          }
-        }
-      };
-
-      xhr.open("GET", apiUrl, true);
-      xhr.send();
-    });
-  },
-  getHtmlFromString: (htmlString) => {
-    const tempContainer = document.createElement("div");
-    tempContainer.innerHTML = htmlString;
-    return tempContainer.firstChild;
-  },
-};
-
 async function enhanceSprintBoard() {
   const baseUrl = "https://jira.sso.episerver.net";
   const urlParams = new URLSearchParams(window.location.search);
@@ -414,11 +361,11 @@ async function enhanceSprintBoard() {
     const progressBarId = "ghx-sprint-progress-bar-container";
 
     const progressBarHtmlString = `<div id="${progressBarId}" style="float:left; margin-left: 20px; margin-right: 20px; width: 200px; height: 30px; position: relative; display: inline-block;">
-          <progress id="ghx-progressBar" value="${percentage}" max="100" style="width: 200px; height: 32px;"></progress>
-          <span style="position: absolute; font-size: 10px; color: #666; left: 33%; top: 30%; font-weight: bold; width: 80px; text-align: center;">
-              ${doneCount} / ${totalCount} points
-          </span>
-      </div>`;
+            <progress id="ghx-progressBar" value="${percentage}" max="100" style="width: 200px; height: 32px;"></progress>
+            <span style="position: absolute; font-size: 10px; color: #666; left: 33%; top: 30%; font-weight: bold; width: 80px; text-align: center;">
+                ${doneCount} / ${totalCount} points
+            </span>
+        </div>`;
 
     const progressBarHtml = Utils.getHtmlFromString(progressBarHtmlString);
 
@@ -468,13 +415,13 @@ async function enhanceSprintBoard() {
 
     const htmlGenerator = (pairData) => {
       return `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${headerStatsFontSize}">
-      ${pairData.p1} + ${pairData.p2} (${pairData.count})
-    </span>`;
+        ${pairData.p1} + ${pairData.p2} (${pairData.count})
+      </span>`;
     };
     const elementId = "ghx-header-reviewer-pairs-counts";
     let htmlString = `<div id="${elementId}">
-    <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}">REVIEW PAIRS:</span>
-  `;
+      <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}">REVIEW PAIRS:</span>
+    `;
 
     for (const pairData of dataArray) {
       const epicHtml = htmlGenerator(pairData);
@@ -523,124 +470,3 @@ async function enhanceSprintBoard() {
 
   await run();
 }
-
-async function enhanceBacklog() {
-  const issuesLists = [...document.querySelectorAll(".ghx-backlog-container")];
-
-  if (!issuesLists.length) {
-    return;
-  }
-
-  const urlParams = new URLSearchParams(window.location.search);
-
-  const view = urlParams.get("view") || "";
-  if (!view.includes("planning")) {
-    return;
-  }
-
-  function getTotalPointsHtmlElement(elementId, points) {
-    const str = `<div id="${elementId}" style="
-position: absolute;
-right: 0;
-padding-right: 25px;
-padding-bottom: 12px;
-padding-top: 30px;
-">(Total Points: ${points})</div>`;
-
-    return Utils.getHtmlFromString(str);
-  }
-
-  function clearAllTotalCounts() {
-    const elements = [
-      ...document.querySelectorAll('[id$="_totalPointsElement"]'),
-    ];
-    elements.forEach((e) => {
-      e.remove();
-    });
-  }
-
-  function refreshPointCount(element) {
-    clearAllTotalCounts();
-
-    const backlogId = element.querySelector(".ghx-name").innerText;
-
-    const totalPointsElementId = `${backlogId}_totalPointsElement`.replace(
-      /\s/g,
-      "_"
-    );
-
-    const selectedIssues = [
-      ...element.querySelectorAll(".js-issue.ghx-selected"),
-    ];
-
-    const totalPoints = selectedIssues.reduce((sum, issue) => {
-      const countElem = issue.querySelector(
-        ".ghx-estimate .ghx-statistic-badge"
-      );
-      const count = +countElem.innerText;
-      return sum + count;
-    }, 0);
-
-    const totalPointsElem = getTotalPointsHtmlElement(
-      totalPointsElementId,
-      totalPoints
-    );
-
-    const existingElem = document.getElementById(totalPointsElementId);
-
-    if (existingElem) {
-      existingElem.innerText = totalPointsElem.innerText;
-    } else {
-      element.querySelector(".ghx-sprint-info").appendChild(totalPointsElem);
-    }
-  }
-
-  issuesLists.forEach((issueList) => {
-    issueList.addEventListener("click", async function (_event) {
-      await Utils.delay(100);
-      // to give time for the selected class to be appended
-      try {
-        refreshPointCount(this);
-      } catch (error) {
-        console.error(error);
-      }
-    });
-  });
-
-  window.ENHANCE_BACKLOG_LISTENERS_IS_ACTIVE = 1;
-}
-
-async function setDefaults() {
-  if (
-    [undefined, null].includes(
-      await localStorageService.get(options.flags.HOURS_IN_STATUS_ENABLED)
-    )
-  ) {
-    localStorageService.set(options.flags.HOURS_IN_STATUS_ENABLED, true);
-  }
-
-  if (
-    [undefined, null].includes(
-      await localStorageService.get(options.flags.SHOW_REVIEW_PAIRS_ENABLED)
-    )
-  ) {
-    localStorageService.set(options.flags.SHOW_REVIEW_PAIRS_ENABLED, false);
-  }
-}
-
-async function run() {
-  setDefaults();
-
-  await enhanceSprintBoard();
-  await enhanceBacklog();
-}
-
-async function loop(fn) {
-  await fn();
-
-  setInterval(async () => {
-    await fn();
-  }, 2000);
-}
-
-loop(run);
