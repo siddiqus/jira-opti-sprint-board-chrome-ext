@@ -266,31 +266,54 @@ async function enhanceSprintBoard() {
     return reviewersMap;
   }
 
-  function populateReviewerData(reviewerData) {
-    const dataArray = Object.keys(reviewerData).reduce(
-      (arr, d) => [
+  function getFreeReviewersSet(issueData) {
+    const allPeople = new Set(issueData.map((i) => i.assignee));
+    const inReview = issueData.filter(
+      (i) =>
+        (i.status.toLowerCase().includes('peer') || i.status.toLowerCase().includes('code')) &&
+        i.status.toLowerCase().includes('review'),
+    );
+
+    const reviewersInReview = new Set(inReview.flatMap((i) => i.reviewers));
+    const freeReviewers = Array.from(allPeople).filter((person) => !reviewersInReview.has(person));
+    return new Set(freeReviewers);
+  }
+
+  function populateReviewerData(issueData) {
+    const reviewerData = getReviewerData(issueData);
+
+    if (!Object.keys(reviewerData).length) {
+      return;
+    }
+
+    const allPeople = Array.from(new Set(issueData.map((i) => i.assignee)));
+
+    const freeReviewersSet = getFreeReviewersSet(issueData, reviewerData);
+
+    const dataArray = allPeople.reduce(
+      (arr, name) => [
         ...arr,
         {
-          name: d,
-          count: reviewerData[d].length,
+          name,
+          count: reviewerData[name] ? reviewerData[name].length : 0,
+          isFree: freeReviewersSet.has(name),
         },
       ],
       [],
     );
 
-    if (!dataArray.length) {
-      return;
-    }
-
     dataArray.sort((a, b) => b.count - a.count);
 
-    const getHtml = (asigneeName, assigneeTasks) =>
-      `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${headerStatsFontSize}"> ${asigneeName}: ${assigneeTasks} </span>`;
+    const getHtml = (reviewer) => {
+      return `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${headerStatsFontSize}">
+        ${reviewer.name}: ${reviewer.count || ''} ${reviewer.isFree ? '<span style="color:#555">(free)</span>' : ''}
+      </span>`;
+    };
     const elementId = 'ghx-header-reviewer-task-counts';
     let htmlString = `<div id="${elementId}"> <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}">REVIEWS:</span>`;
 
     dataArray.forEach((reviewer) => {
-      const epicHtml = getHtml(reviewer.name, reviewer.count);
+      const epicHtml = getHtml(reviewer);
       htmlString += epicHtml;
     });
     htmlString += '</div>';
@@ -442,7 +465,7 @@ async function enhanceSprintBoard() {
     // for headers, these will be shown in the reverse order
     populateEpicCompletionData(getEpicCompletionData(issueData));
     populateAssigneeData(Utils.groupBy(issueData, 'assignee'));
-    populateReviewerData(getReviewerData(issueData));
+    populateReviewerData(issueData);
     if (await localStorageService.get(options.flags.SHOW_REVIEW_PAIRS_ENABLED)) {
       populateReviewerPairData(issueData);
     }
