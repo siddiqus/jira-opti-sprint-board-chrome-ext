@@ -1,7 +1,11 @@
 // eslint-disable-next-line
 const SPRINT_HEADER_ID = '#ghx-column-header-group';
+
 // eslint-disable-next-line
 const TIME_ELAPSED_CLASS_NAME = 'ghx-issue-time-elapsed';
+
+// eslint-disable-next-line
+const HEADER_STATS_FONT_SIZE = '11px';
 
 const options = {
   flags: {

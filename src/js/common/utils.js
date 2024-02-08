@@ -48,4 +48,8 @@ const Utils = {
     tempContainer.innerHTML = htmlString.trim();
     return tempContainer.firstChild;
   },
+
+  insertAfter: (referenceNode, newNode) => {
+    referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
+  },
 };

@@ -113,7 +113,10 @@ async function enhanceSprintBoard() {
 
     const htmlCardMap = cards.reduce((obj, card) => {
       const id = card.getAttribute('id');
-      return { ...obj, [id]: card };
+      return {
+        ...obj,
+        [id]: card,
+      };
     }, {});
 
     for (const issue of issueData) {
@@ -146,7 +149,9 @@ async function enhanceSprintBoard() {
   function getEpicCompletionData(issueData) {
     const epicMap = issueData.reduce((obj, issue) => {
       const epicName = issue.epicName || 'N/A';
-      const newObj = { ...obj };
+      const newObj = {
+        ...obj,
+      };
       if (newObj[epicName]) {
         newObj[epicName].push(issue);
       } else {
@@ -169,8 +174,13 @@ async function enhanceSprintBoard() {
     return results;
   }
 
-  function appendHtmlStringToHeader(newElementSelector, htmlString) {
-    const htmlElem = Utils.getHtmlFromString(htmlString);
+  function appendHtmlStringToHeader(newElementSelector, html) {
+    let htmlElem;
+    if (typeof html === 'string') {
+      htmlElem = Utils.getHtmlFromString(html);
+    } else {
+      htmlEncode = html;
+    }
 
     const headerElem = document.querySelector(SPRINT_HEADER_ID);
 
@@ -186,25 +196,118 @@ async function enhanceSprintBoard() {
     }
   }
 
-  const headerStatsFontSize = '11px';
+  function setSearchIcon(mode) {
+    const iconElement = document.getElementById('ghx-board-search-icon');
+    // aui-iconfont-remove
+    if (mode === 'reset') {
+      iconElement.classList.remove('aui-iconfont-remove', 'aui-button');
+      iconElement.classList.add('aui-iconfont-search-small');
+    } else {
+      iconElement.classList.remove('aui-iconfont-search-small');
+      iconElement.classList.add('aui-iconfont-remove', 'aui-button');
+    }
+  }
+
+  function resetIssueFilter() {
+    [...document.getElementsByClassName('ghx-issue')].forEach((card) => {
+      // eslint-disable-next-line
+      card.style.display = 'block';
+    });
+
+    setSearchIcon('reset');
+
+    document.getElementById('ghx-board-search-input').value = '';
+  }
+
+  function filterIssues(query) {
+    if (!query || !query.trim()) {
+      // reset all cards
+      resetIssueFilter();
+      return;
+    }
+
+    // eslint-disable-next-line
+    query = query.trim();
+
+    const cards = [...document.getElementsByClassName('ghx-issue')];
+
+    cards.forEach((card) => {
+      const innerText = card.innerText.toLowerCase();
+
+      if (innerText.includes(query.toLowerCase())) {
+        // eslint-disable-next-line
+        card.style.display = 'block';
+      } else {
+        // eslint-disable-next-line
+        card.style.display = 'none';
+      }
+    });
+  }
 
   function populateEpicCompletionData(epicCompletionData) {
     if (!epicCompletionData.length) {
       return;
     }
-    const getHtml = (epic) =>
-      `<span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}"> ${epic.epicName} (${epic.doneCount}/${epic.totalCount}) </span>`;
-    let htmlString = `<div id="ghx-header-epic-counts" style="padding-top:5px;"> <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}">EPICS:</span> `;
+    const getHtml = (epic) => {
+      const elem = Utils.getHtmlFromString(`<span
+        class="aui-label ghx-jira-plugin-epic-selector"
+        style="${epic.epicName === 'N/A' ? '' : 'cursor: pointer;'} padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">
+          ${epic.epicName} (${epic.doneCount}/${epic.totalCount})
+      </span>`);
+
+      function toggleEpicFilter(e, epicName) {
+        const isSelected = e.style.border.includes('blue');
+
+        [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].forEach((elem) => {
+          elem.style.border = '1px solid #f4f5f7';
+        });
+
+        if (!isSelected) {
+          e.style.border = '1px solid blue';
+          filterIssues(epicName);
+          window.JIRA_PLUGIN_EPIC_FILTER = epicName;
+        } else {
+          resetIssueFilter();
+        }
+      }
+
+      if (epic.epicName !== 'N/A') {
+        elem.addEventListener('click', (e) => {
+          toggleEpicFilter(e.target, epic.epicName);
+        });
+      }
+
+      return elem;
+    };
+    const container = Utils.getHtmlFromString(`<div
+        id="ghx-header-epic-counts"
+        style="padding-top:5px;"
+    >
+        <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">
+            EPICS:
+        </span>
+    </div>`);
+
+    const headerElem = document.querySelector(SPRINT_HEADER_ID);
+
+    if (!headerElem) {
+      return;
+    }
+
+    let existingElem = headerElem.querySelector('#ghx-header-epic-counts');
+    if (existingElem) {
+      existingElem.remove();
+    }
+
+    Utils.insertAfter(document.getElementById('ghx-column-headers'), container);
 
     epicCompletionData.sort((a, b) => b.totalCount - a.totalCount);
 
+    existingElem = document.getElementById('ghx-header-epic-counts');
     for (const epic of epicCompletionData) {
       const epicHtml = getHtml(epic);
-      htmlString += epicHtml;
+      existingElem.appendChild(epicHtml);
     }
-    htmlString += '</div>';
-
-    appendHtmlStringToHeader('#ghx-header-epic-counts', htmlString);
   }
 
   function populateAssigneeData(assignedTasksData) {
@@ -234,9 +337,9 @@ async function enhanceSprintBoard() {
     });
 
     const getHtml = (asigneeName, assigneeTasks) =>
-      `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${headerStatsFontSize}"> ${asigneeName}: ${assigneeTasks} </span>`;
+      `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}"> ${asigneeName}: ${assigneeTasks} </span>`;
     const elementId = 'ghx-header-assignee-task-counts';
-    let htmlString = `<div id="${elementId}"> <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}">ASSIGNED:</span>`;
+    let htmlString = `<div id="${elementId}"> <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">ASSIGNED:</span>`;
 
     for (const assignee of dataArray) {
       const epicHtml = getHtml(assignee.name, assignee.count);
@@ -306,11 +409,11 @@ async function enhanceSprintBoard() {
 
     const getHtml = (
       reviewer,
-    ) => `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${headerStatsFontSize}">
-        ${reviewer.name}: ${reviewer.count || ''} ${reviewer.isFree ? '<span style="color:#555">(free)</span>' : ''}
-      </span>`;
+    ) => `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
+      ${reviewer.name}: ${reviewer.count || ''} ${reviewer.isFree ? '<span style="color:#555">(free)</span>' : ''}
+    </span>`;
     const elementId = 'ghx-header-reviewer-task-counts';
-    let htmlString = `<div id="${elementId}"> <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}">REVIEWS:</span>`;
+    let htmlString = `<div id="${elementId}"> <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">REVIEWS:</span>`;
 
     dataArray.forEach((reviewer) => {
       const epicHtml = getHtml(reviewer);
@@ -323,7 +426,9 @@ async function enhanceSprintBoard() {
 
   function showStatusColumnCounts(issueData) {
     const statusCountMap = issueData.reduce((map, issue) => {
-      const newMap = { ...map };
+      const newMap = {
+        ...map,
+      };
       const status = issue.status.toUpperCase();
       if (newMap[status]) {
         newMap[status] += 1;
@@ -367,11 +472,11 @@ async function enhanceSprintBoard() {
     const progressBarId = 'ghx-sprint-progress-bar-container';
 
     const progressBarHtmlString = `<div id="${progressBarId}" style="float:left; margin-left: 20px; margin-right: 20px; width: 200px; height: 30px; position: relative; display: inline-block;">
-            <progress id="ghx-progressBar" value="${percentage}" max="100" style="width: 200px; height: 32px;"></progress>
-            <span style="position: absolute; font-size: 10px; color: #666; left: 33%; top: 30%; font-weight: bold; width: 80px; text-align: center;">
-                ${doneCount} / ${totalCount} points
-            </span>
-        </div>`;
+          <progress id="ghx-progressBar" value="${percentage}" max="100" style="width: 200px; height: 32px;"></progress>
+          <span style="position: absolute; font-size: 10px; color: #666; left: 33%; top: 30%; font-weight: bold; width: 80px; text-align: center;">
+              ${doneCount} / ${totalCount} points
+          </span>
+      </div>`;
 
     const progressBarHtml = Utils.getHtmlFromString(progressBarHtmlString);
 
@@ -407,7 +512,8 @@ async function enhanceSprintBoard() {
     const pairCounts = getReviewerPairs(issuesData);
 
     const dataArray = Object.keys(pairCounts).reduce((obj, pair) => {
-      const [p1, p2] = pair.split('-').map((p) => p.split(' ').shift()); // first names only
+      const [p1, p2] = pair.split('-').map((p) => p.split(' ').shift());
+      // first names only
       const count = pairCounts[pair];
       const newPair = {
         p1,
@@ -421,14 +527,14 @@ async function enhanceSprintBoard() {
 
     const getHtml = (
       pairData,
-    ) => `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${headerStatsFontSize}">
-        ${pairData.p1} + ${pairData.p2} (${pairData.count})
-      </span>`;
+    ) => `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
+      ${pairData.p1} + ${pairData.p2} (${pairData.count})
+    </span>`;
 
     const elementId = 'ghx-header-reviewer-pairs-counts';
     let htmlString = `<div id="${elementId}">
-      <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}">REVIEW PAIRS:</span>
-    `;
+    <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">REVIEW PAIRS:</span>
+  `;
 
     dataArray.forEach((pairData) => {
       const epicHtml = getHtml(pairData);
@@ -437,54 +543,6 @@ async function enhanceSprintBoard() {
     htmlString += '</div>';
 
     appendHtmlStringToHeader(`#${elementId}`, htmlString);
-  }
-
-  function setSearchIcon(mode) {
-    const iconElement = document.getElementById('ghx-board-search-icon');
-    // aui-iconfont-remove
-    if (mode === 'reset') {
-      iconElement.classList.remove('aui-iconfont-remove', 'aui-button');
-      iconElement.classList.add('aui-iconfont-search-small');
-    } else {
-      iconElement.classList.remove('aui-iconfont-search-small');
-      iconElement.classList.add('aui-iconfont-remove', 'aui-button');
-    }
-  }
-
-  function resetIssueFilter() {
-    [...document.getElementsByClassName('ghx-issue')].forEach((card) => {
-      // eslint-disable-next-line
-      card.style.display = 'block';
-    });
-
-    setSearchIcon('reset');
-
-    document.getElementById('ghx-board-search-input').value = '';
-  }
-
-  function filterIssues(query) {
-    if (!query || !query.trim()) {
-      // reset all cards
-      resetIssueFilter();
-      return;
-    }
-
-    // eslint-disable-next-line
-    query = query.trim();
-
-    const cards = [...document.getElementsByClassName('ghx-issue')];
-
-    cards.forEach((card) => {
-      const innerText = card.innerText.toLowerCase();
-
-      if (innerText.includes(query)) {
-        // eslint-disable-next-line
-        card.style.display = 'block';
-      } else {
-        // eslint-disable-next-line
-        card.style.display = 'none';
-      }
-    });
   }
 
   function addSearchBehavior() {
@@ -525,19 +583,35 @@ async function enhanceSprintBoard() {
     }
 
     const html = `<div
-    id="ghx-board-search-container"
-    style="position: absolute;top: 0;right: 20px;width: 196px;border: 1px solid lightgray;border-radius: 3px;padding: 8px 10px;"
-  >
-    <input id="ghx-board-search-input" placeholder="Search here" spellcheck="false" style="border: none; border-radius: 3px; color: #666; width: 170px;"></input>
-    <span id="ghx-board-search-icon" class="js-search-trigger ghx-iconfont aui-icon aui-icon-small aui-iconfont-search-small" style="position: absolute; right: 10px; top: 28%; color: #666; background: white;">
-    </span>
-  </div>`;
+  id="ghx-board-search-container"
+  style="position: absolute;top: 0;right: 20px;width: 196px;border: 1px solid lightgray;border-radius: 3px;padding: 8px 10px;"
+>
+  <input id="ghx-board-search-input" placeholder="Search here" spellcheck="false" style="border: none; border-radius: 3px; color: #666; width: 170px;"></input>
+  <span id="ghx-board-search-icon" class="js-search-trigger ghx-iconfont aui-icon aui-icon-small aui-iconfont-search-small" style="position: absolute; right: 10px; top: 28%; color: #666; background: white;">
+  </span>
+</div>`;
 
     const element = Utils.getHtmlFromString(html);
     const parent = document.getElementById('ghx-operations');
     parent.appendChild(element);
 
     addSearchBehavior();
+  }
+
+  function initialEpicFilter() {
+    const query = window.JIRA_PLUGIN_EPIC_FILTER;
+    if (!query) {
+      return;
+    }
+
+    filterIssues(query);
+    const selected = [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].find(
+      (e) => e.innerText.includes(query),
+    );
+
+    if (selected) {
+      selected.style.border = '1px solid blue';
+    }
   }
 
   async function run() {
@@ -563,7 +637,6 @@ async function enhanceSprintBoard() {
       [...document.getElementsByClassName(TIME_ELAPSED_CLASS_NAME)].forEach((q) => q.remove());
     }
 
-    // for headers, these will be shown in the reverse order
     populateEpicCompletionData(getEpicCompletionData(issueData));
     populateAssigneeData(Utils.groupBy(issueData, 'assignee'));
     populateReviewerData(issueData);
@@ -571,7 +644,10 @@ async function enhanceSprintBoard() {
       populateReviewerPairData(issueData);
     }
     renderSearchHtmlElement();
+    initialEpicFilter();
   }
 
   await run();
 }
+
+enhanceSprintBoard();
