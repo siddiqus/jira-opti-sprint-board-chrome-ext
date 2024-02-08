@@ -244,6 +244,29 @@ async function enhanceSprintBoard() {
     });
   }
 
+  function initialEpicFilter() {
+    const query = window.JIRA_PLUGIN_EPIC_FILTER;
+    if (!query) {
+      return;
+    }
+
+    filterIssues(query);
+    const selected = [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].find(
+      (e) => e.innerText.includes(query),
+    );
+
+    if (selected) {
+      selected.style.border = '1px solid blue';
+    }
+  }
+
+  function resetEpicFiltersCss() {
+    [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].forEach((elem) => {
+      // eslint-disable-next-line
+      elem.style.border = '1px solid #f4f5f7';
+    });
+  }
+
   function populateEpicCompletionData(epicCompletionData) {
     if (!epicCompletionData.length) {
       return;
@@ -258,9 +281,7 @@ async function enhanceSprintBoard() {
       function toggleEpicFilter(e, epicName) {
         const isSelected = e.style.border.includes('blue');
 
-        [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].forEach((elem) => {
-          elem.style.border = '1px solid #f4f5f7';
-        });
+        resetEpicFiltersCss();
 
         if (!isSelected) {
           e.style.border = '1px solid blue';
@@ -471,9 +492,10 @@ async function enhanceSprintBoard() {
 
     const progressBarId = 'ghx-sprint-progress-bar-container';
 
-    const progressBarHtmlString = `<div id="${progressBarId}" style="float:left; margin-left: 20px; margin-right: 20px; width: 200px; height: 30px; position: relative; display: inline-block;">
-          <progress id="ghx-progressBar" value="${percentage}" max="100" style="width: 200px; height: 32px;"></progress>
-          <span style="position: absolute; font-size: 10px; color: #666; left: 33%; top: 30%; font-weight: bold; width: 80px; text-align: center;">
+    const progressBarBorderRadius = percentage < 94 ? '2em 2px 2px 2em' : '2em';
+    const progressBarHtmlString = `<div id="${progressBarId}" style="float:left; border-radius: 2em; border: 1px solid gray; margin-left: 20px; margin-right: 20px; width: 200px; height: 26px; position: relative; display: inline-block;">
+          <div id="ghx-progressBar" style="transition: width 0.6s ease-in-out; height: 26px; background: #6fbfff;border-radius: ${progressBarBorderRadius};width: 0px;"></div>
+          <span style="position: absolute; font-size: 10px; color: black; left: 33%; top: 27%; font-weight: bold; width: 80px; text-align: center;">
               ${doneCount} / ${totalCount} points
           </span>
       </div>`;
@@ -487,6 +509,13 @@ async function enhanceSprintBoard() {
     if (parent) {
       parent.insertBefore(progressBarHtml, parent.firstChild);
     }
+
+    Utils.delay(100).then(() => {
+      const progressBar = document.getElementById('ghx-progressBar');
+      if (progressBar) {
+        progressBar.style.width = `${percentage}%`;
+      }
+    });
   }
 
   function getReviewerPairs(issuesData) {
@@ -549,6 +578,8 @@ async function enhanceSprintBoard() {
     const inputElement = document.getElementById('ghx-board-search-input');
 
     inputElement.addEventListener('input', (e) => {
+      resetEpicFiltersCss();
+
       const query = e.target.value;
       window.GHX_SPRINT_BOARD_SEARCH_VALUE = query;
       filterIssues(query);
@@ -596,22 +627,6 @@ async function enhanceSprintBoard() {
     parent.appendChild(element);
 
     addSearchBehavior();
-  }
-
-  function initialEpicFilter() {
-    const query = window.JIRA_PLUGIN_EPIC_FILTER;
-    if (!query) {
-      return;
-    }
-
-    filterIssues(query);
-    const selected = [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].find(
-      (e) => e.innerText.includes(query),
-    );
-
-    if (selected) {
-      selected.style.border = '1px solid blue';
-    }
   }
 
   async function run() {
