@@ -10,15 +10,12 @@ const options = {
   },
 };
 
-const localStorageService = (() => {
-   return {
-    get: async (key) =>
-      chrome.storage.sync.get([key]).then((result) => result[key]),
-    set: (key, value) => {
-      chrome.storage.sync.set({ [key]: value });
-    },
-  };
-})();
+const localStorageService = (() => ({
+  get: async (key) => chrome.storage.sync.get([key]).then((result) => result[key]),
+  set: (key, value) => {
+    chrome.storage.sync.set({ [key]: value });
+  },
+}))();
 
 // eslint-disable-next-line
 async function setDefaults() {

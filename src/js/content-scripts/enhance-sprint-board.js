@@ -304,11 +304,11 @@ async function enhanceSprintBoard() {
 
     dataArray.sort((a, b) => b.count - a.count);
 
-    const getHtml = (reviewer) => {
-      return `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${headerStatsFontSize}">
+    const getHtml = (
+      reviewer,
+    ) => `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${headerStatsFontSize}">
         ${reviewer.name}: ${reviewer.count || ''} ${reviewer.isFree ? '<span style="color:#555">(free)</span>' : ''}
       </span>`;
-    };
     const elementId = 'ghx-header-reviewer-task-counts';
     let htmlString = `<div id="${elementId}"> <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${headerStatsFontSize}">REVIEWS:</span>`;
 
@@ -439,6 +439,107 @@ async function enhanceSprintBoard() {
     appendHtmlStringToHeader(`#${elementId}`, htmlString);
   }
 
+  function setSearchIcon(mode) {
+    const iconElement = document.getElementById('ghx-board-search-icon');
+    // aui-iconfont-remove
+    if (mode === 'reset') {
+      iconElement.classList.remove('aui-iconfont-remove', 'aui-button');
+      iconElement.classList.add('aui-iconfont-search-small');
+    } else {
+      iconElement.classList.remove('aui-iconfont-search-small');
+      iconElement.classList.add('aui-iconfont-remove', 'aui-button');
+    }
+  }
+
+  function resetIssueFilter() {
+    [...document.getElementsByClassName('ghx-issue')].forEach((card) => {
+      // eslint-disable-next-line
+      card.style.display = 'block';
+    });
+
+    setSearchIcon('reset');
+
+    document.getElementById('ghx-board-search-input').value = '';
+  }
+
+  function filterIssues(query) {
+    if (!query || !query.trim()) {
+      // reset all cards
+      resetIssueFilter();
+      return;
+    }
+
+    // eslint-disable-next-line
+    query = query.trim();
+
+    const cards = [...document.getElementsByClassName('ghx-issue')];
+
+    cards.forEach((card) => {
+      const innerText = card.innerText.toLowerCase();
+
+      if (innerText.includes(query)) {
+        // eslint-disable-next-line
+        card.style.display = 'block';
+      } else {
+        // eslint-disable-next-line
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  function addSearchBehavior() {
+    const inputElement = document.getElementById('ghx-board-search-input');
+
+    inputElement.addEventListener('input', (e) => {
+      const query = e.target.value;
+      window.GHX_SPRINT_BOARD_SEARCH_VALUE = query;
+      filterIssues(query);
+
+      if (query.length > 0) {
+        setSearchIcon('search');
+      } else {
+        setSearchIcon('reset');
+      }
+    });
+
+    inputElement.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' || event.keyCode === 27) {
+        resetIssueFilter();
+      }
+    });
+
+    const iconElement = document.getElementById('ghx-board-search-icon');
+
+    iconElement.addEventListener('click', () => {
+      if (window.GHX_SPRINT_BOARD_SEARCH_VALUE && window.GHX_SPRINT_BOARD_SEARCH_VALUE.length > 0) {
+        resetIssueFilter();
+      }
+    });
+  }
+
+  async function renderSearchHtmlElement() {
+    const existingElem = document.getElementById('ghx-board-search-container');
+    if (existingElem) {
+      filterIssues(window.GHX_SPRINT_BOARD_SEARCH_VALUE);
+      return;
+    }
+
+    const html = `<div
+    id="ghx-board-search-container"
+    style="position: absolute;top: 0;right: 20px;width: 196px;border: 1px solid lightgray;border-radius: 3px;padding: 8px 10px;"
+  >
+    <input id="ghx-board-search-input" placeholder="Search here" spellcheck="false" style="border: none; border-radius: 3px; color: #666; width: 170px;"></input>
+    <span id="ghx-board-search-icon" class="js-search-trigger ghx-iconfont aui-icon aui-icon-small aui-iconfont-search-small" style="position: absolute; right: 10px; top: 28%; color: #666; background: white;">
+    </span>
+  </div>`;
+
+    const element = Utils.getHtmlFromString(html);
+    const parent = document.getElementById('ghx-operations');
+    parent.appendChild(element);
+
+    addSearchBehavior();
+  }
+
   async function run() {
     const boardUrl = getBoardUrl(baseUrl, rapidViewId);
 
@@ -469,6 +570,7 @@ async function enhanceSprintBoard() {
     if (await localStorageService.get(options.flags.SHOW_REVIEW_PAIRS_ENABLED)) {
       populateReviewerPairData(issueData);
     }
+    renderSearchHtmlElement();
   }
 
   await run();

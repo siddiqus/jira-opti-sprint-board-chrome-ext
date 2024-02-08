@@ -45,7 +45,7 @@ const Utils = {
 
   getHtmlFromString: (htmlString) => {
     const tempContainer = document.createElement('div');
-    tempContainer.innerHTML = htmlString;
+    tempContainer.innerHTML = htmlString.trim();
     return tempContainer.firstChild;
   },
 };
