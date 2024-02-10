@@ -242,9 +242,10 @@ async function enhanceSprintBoard() {
       assignee = window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER;
     }
 
-    const shouldResetFilter = !Object.keys(params).reduce((arr, k) => {
-      return [...arr, Boolean(params[k] ? params[k].trim() : '')];
-    }, []);
+    const shouldResetFilter = !Object.keys(params).reduce(
+      (arr, k) => [...arr, Boolean(params[k] ? params[k].trim() : '')],
+      [],
+    );
 
     if (shouldResetFilter) {
       // reset all cards
@@ -287,22 +288,17 @@ async function enhanceSprintBoard() {
     });
   }
 
-  function filterSprintIssuesByEpic(epicName) {
-    window.JIRA_PLUGIN_SPRINT_EPIC_FILTER = epicName;
-    filterSprintIssuesV2();
-  }
-
-  function filterSprintIssuesByAssignee(assigneeName) {
-    window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER = assigneeName;
-    filterSprintIssuesV2();
+  function resetEpicFiltersCss() {
+    [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].forEach((elem) => {
+      // eslint-disable-next-line
+      elem.style.border = '1px solid #f4f5f7';
+    });
   }
 
   const sprintIssueFilters = {
     byQuery: {
       set: (query) => {
         window.JIRA_PLUGIN_SPRINT_QUERY_FILTER = query;
-
-        resetEpicFiltersCss();
 
         if (query.length > 0) {
           setSearchIcon('search');
@@ -320,65 +316,45 @@ async function enhanceSprintBoard() {
         filterSprintIssuesV2();
       },
     },
+    byEpic: {
+      init: () => {
+        const query = window.JIRA_PLUGIN_SPRINT_EPIC_FILTER;
+        if (!query) {
+          return;
+        }
+
+        const selected = [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].find(
+          (e) => e.innerText.includes(query),
+        );
+
+        if (selected) {
+          selected.style.border = '1px solid blue';
+        }
+      },
+      set: (epicName) => {
+        window.JIRA_PLUGIN_SPRINT_EPIC_FILTER = epicName;
+
+        resetEpicFiltersCss();
+
+        filterSprintIssuesV2();
+      },
+      reset: () => {
+        window.JIRA_PLUGIN_SPRINT_EPIC_FILTER = null;
+        resetEpicFiltersCss();
+        filterSprintIssuesV2();
+      },
+    },
+    byAssignee: {
+      set: (assigneeName) => {
+        window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER = assigneeName;
+        filterSprintIssuesV2();
+      },
+      reset: () => {
+        window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER = null;
+        filterSprintIssuesV2();
+      },
+    },
   };
-
-  function resetEpicFilter() {
-    window.JIRA_PLUGIN_SPRINT_EPIC_FILTER = null;
-    filterSprintIssuesV2();
-  }
-
-  function resetAssigneeFilter() {
-    window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER = null;
-    filterSprintIssuesV2();
-  }
-
-  function filterIssues(query) {
-    if (!query || !query.trim()) {
-      // reset all cards
-      resetIssueFilter();
-      return;
-    }
-
-    // eslint-disable-next-line
-    query = query.trim();
-
-    const cards = [...document.getElementsByClassName('ghx-issue')];
-
-    cards.forEach((card) => {
-      const innerText = card.innerText.toLowerCase();
-
-      if (innerText.includes(query.toLowerCase())) {
-        // eslint-disable-next-line
-        card.style.display = 'block';
-      } else {
-        // eslint-disable-next-line
-        card.style.display = 'none';
-      }
-    });
-  }
-
-  function initialEpicFilter() {
-    const query = window.JIRA_PLUGIN_EPIC_FILTER;
-    if (!query) {
-      return;
-    }
-
-    filterIssues(query);
-    const selected = [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].find(
-      (e) => e.innerText.includes(query),
-    );
-
-    if (selected) {
-      selected.style.border = '1px solid blue';
-    }
-  }
-
-  function resetEpicFiltersCss() {
-    [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].forEach((elem) => {
-      // eslint-disable-next-line
-      elem.style.border = '1px solid #f4f5f7';
-    });
-  }
 
   function populateEpicCompletionData(epicCompletionData) {
     if (!epicCompletionData.length) {
@@ -394,15 +370,11 @@ async function enhanceSprintBoard() {
       function toggleEpicFilter(e, epicName) {
         const isSelected = e.style.border.includes('blue');
 
-        resetEpicFiltersCss();
-
         if (!isSelected) {
+          sprintIssueFilters.byEpic.set(epicName);
           e.style.border = '1px solid blue';
-          filterIssues(epicName);
-          window.JIRA_PLUGIN_EPIC_FILTER = epicName;
         } else {
-          window.JIRA_PLUGIN_EPIC_FILTER = null;
-          resetIssueFilter();
+          sprintIssueFilters.byEpic.reset();
         }
       }
 
@@ -705,16 +677,15 @@ async function enhanceSprintBoard() {
   async function renderSearchHtmlElement() {
     const existingElem = document.getElementById('ghx-board-search-container');
     if (existingElem) {
-      filterIssues(window.JIRA_PLUGIN_SPRINT_QUERY_FILTER);
       return;
     }
 
     const html = `<div
   id="ghx-board-search-container"
-  style="position: absolute;top: 0;right: 20px;width: 196px;border: 1px solid lightgray;border-radius: 3px;padding: 8px 10px;"
+  style="position: absolute;top: 0;right: 20px;width: 196px;border: 1px solid lightgray;border-radius: 3px;padding: 4px 10px;"
 >
   <input id="ghx-board-search-input" placeholder="Search here" spellcheck="false" style="border: none; border-radius: 3px; color: #666; width: 170px;"></input>
-  <span id="ghx-board-search-icon" class="js-search-trigger ghx-iconfont aui-icon aui-icon-small aui-iconfont-search-small" style="position: absolute; right: 10px; top: 28%; color: #666; background: white;">
+  <span id="ghx-board-search-icon" class="js-search-trigger ghx-iconfont aui-icon aui-icon-small aui-iconfont-search-small" style="position: absolute; right: 10px; top: 24%; color: #666; background: white;">
   </span>
 </div>`;
 
@@ -755,7 +726,10 @@ async function enhanceSprintBoard() {
       populateReviewerPairData(issueData);
     }
     renderSearchHtmlElement();
-    initialEpicFilter();
+
+    sprintIssueFilters.byEpic.init();
+
+    filterSprintIssuesV2();
   }
 
   await run();
