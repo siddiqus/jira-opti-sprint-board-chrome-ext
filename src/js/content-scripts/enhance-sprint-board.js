@@ -215,8 +215,121 @@ async function enhanceSprintBoard() {
     });
 
     setSearchIcon('reset');
+  }
 
-    document.getElementById('ghx-board-search-input').value = '';
+  function filterSprintIssuesV2(params = {}) {
+    let {
+      query = window.JIRA_PLUGIN_SPRINT_QUERY_FILTER,
+      epic = window.JIRA_PLUGIN_SPRINT_EPIC_FILTER,
+      assignee = window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER,
+    } = params;
+
+    if (query) {
+      window.JIRA_PLUGIN_SPRINT_QUERY_FILTER = query;
+    } else {
+      query = window.JIRA_PLUGIN_SPRINT_QUERY_FILTER;
+    }
+
+    if (epic) {
+      window.JIRA_PLUGIN_SPRINT_EPIC_FILTER = epic;
+    } else {
+      epic = window.JIRA_PLUGIN_SPRINT_EPIC_FILTER;
+    }
+
+    if (assignee) {
+      window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER = assignee;
+    } else {
+      assignee = window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER;
+    }
+
+    const shouldResetFilter = !Object.keys(params).reduce((arr, k) => {
+      return [...arr, Boolean(params[k] ? params[k].trim() : '')];
+    }, []);
+
+    if (shouldResetFilter) {
+      // reset all cards
+      resetIssueFilter();
+      return;
+    }
+
+    const cards = [...document.getElementsByClassName('ghx-issue')];
+
+    function isAllowed(card) {
+      const checks = [];
+
+      if (query) {
+        checks.push(card.innerText.toLowerCase().trim().includes(query.toLowerCase().trim()));
+      }
+
+      if (epic) {
+        checks.push(card.innerText.toLowerCase().trim().includes(epic.toLowerCase().trim()));
+      }
+
+      if (assignee) {
+        const assigneeElement = card.querySelector('.ghx-avatar-img');
+        if (assigneeElement) {
+          const assigneeName = assigneeElement.alt.split('Assignee: ').pop();
+          checks.push(assigneeName === assignee);
+        }
+      }
+
+      return checks.every((p) => p);
+    }
+
+    cards.forEach((card) => {
+      if (isAllowed(card)) {
+        // eslint-disable-next-line
+        card.style.display = 'block';
+      } else {
+        // eslint-disable-next-line
+        card.style.display = 'none';
+      }
+    });
+  }
+
+  function filterSprintIssuesByEpic(epicName) {
+    window.JIRA_PLUGIN_SPRINT_EPIC_FILTER = epicName;
+    filterSprintIssuesV2();
+  }
+
+  function filterSprintIssuesByAssignee(assigneeName) {
+    window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER = assigneeName;
+    filterSprintIssuesV2();
+  }
+
+  const sprintIssueFilters = {
+    byQuery: {
+      set: (query) => {
+        window.JIRA_PLUGIN_SPRINT_QUERY_FILTER = query;
+
+        resetEpicFiltersCss();
+
+        if (query.length > 0) {
+          setSearchIcon('search');
+        } else {
+          setSearchIcon('reset');
+        }
+
+        filterSprintIssuesV2();
+      },
+      reset: () => {
+        window.JIRA_PLUGIN_SPRINT_QUERY_FILTER = null;
+
+        document.getElementById('ghx-board-search-input').value = '';
+
+        filterSprintIssuesV2();
+      },
+    },
+  };
+
+  function resetEpicFilter() {
+    window.JIRA_PLUGIN_SPRINT_EPIC_FILTER = null;
+    filterSprintIssuesV2();
+  }
+
+  function resetAssigneeFilter() {
+    window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER = null;
+    filterSprintIssuesV2();
   }
 
   function filterIssues(query) {
@@ -572,38 +685,27 @@ async function enhanceSprintBoard() {
     const inputElement = document.getElementById('ghx-board-search-input');
 
     inputElement.addEventListener('input', (e) => {
-      resetEpicFiltersCss();
-
       const query = e.target.value;
-      window.GHX_SPRINT_BOARD_SEARCH_VALUE = query;
-      filterIssues(query);
-
-      if (query.length > 0) {
-        setSearchIcon('search');
-      } else {
-        setSearchIcon('reset');
-      }
+      sprintIssueFilters.byQuery.set(query);
     });
 
     inputElement.addEventListener('keydown', (event) => {
       if (event.key === 'Escape' || event.keyCode === 27) {
-        resetIssueFilter();
+        sprintIssueFilters.byQuery.reset();
       }
     });
 
     const iconElement = document.getElementById('ghx-board-search-icon');
 
     iconElement.addEventListener('click', () => {
-      if (window.GHX_SPRINT_BOARD_SEARCH_VALUE && window.GHX_SPRINT_BOARD_SEARCH_VALUE.length > 0) {
-        resetIssueFilter();
-      }
+      sprintIssueFilters.byQuery.reset();
     });
   }
 
   async function renderSearchHtmlElement() {
     const existingElem = document.getElementById('ghx-board-search-container');
     if (existingElem) {
-      filterIssues(window.GHX_SPRINT_BOARD_SEARCH_VALUE);
+      filterIssues(window.JIRA_PLUGIN_SPRINT_QUERY_FILTER);
       return;
     }
 
