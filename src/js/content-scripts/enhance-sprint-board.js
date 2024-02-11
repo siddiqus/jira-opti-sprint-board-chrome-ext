@@ -229,6 +229,14 @@ async function enhanceSprintBoard() {
         toggleEpicFilter(e.target, epic.epicName);
       });
 
+      elem.addEventListener('mouseover', () => {
+        elem.style.backgroundColor = '#e7e7e7';
+      });
+
+      elem.addEventListener('mouseout', () => {
+        elem.style.backgroundColor = '';
+      });
+
       return elem;
     };
 
@@ -300,6 +308,14 @@ async function enhanceSprintBoard() {
 
       elem.addEventListener('click', (e) => {
         toggleAssigneeFilter(e.target, assigneeName);
+      });
+
+      elem.addEventListener('mouseover', () => {
+        elem.style.backgroundColor = '#e7e7e7';
+      });
+
+      elem.addEventListener('mouseout', () => {
+        elem.style.backgroundColor = '';
       });
 
       return elem;
@@ -462,7 +478,7 @@ async function enhanceSprintBoard() {
 
     const progressBarBorderRadius = percentage < 94 ? '2em 2px 2px 2em' : '2em';
     const progressBarHtmlString = `<div id="${progressBarId}" style="float:left; border-radius: 2em; border: 1px solid gray; margin-left: 20px; margin-right: 20px; width: 200px; height: 26px; position: relative; display: inline-block;">
-          <div id="ghx-progressBar" style="transition: width 0.6s ease-in-out; height: 26px; background: #3ea9ff;border-radius: ${progressBarBorderRadius};width: ${percentage}%;"></div>
+          <div id="ghx-progressBar" style="height: 26px; background: #3ea9ff;border-radius: ${progressBarBorderRadius};width: ${percentage}%;"></div>
           <span style="position: absolute; font-size: 12px; color: black; left: 33%; top: 18%; font-weight: 500; width: 80px; text-align: center;">
               ${doneCount} / ${totalCount} points
           </span>
