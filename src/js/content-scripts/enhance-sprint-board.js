@@ -179,7 +179,7 @@ async function enhanceSprintBoard() {
     if (typeof html === 'string') {
       htmlElem = Utils.getHtmlFromString(html);
     } else {
-      htmlEncode = html;
+      htmlElem = html;
     }
 
     const headerElem = document.querySelector(SPRINT_HEADER_ID);
@@ -200,6 +200,13 @@ async function enhanceSprintBoard() {
     if (!epicCompletionData.length) {
       return;
     }
+
+    const headerElem = document.querySelector(SPRINT_HEADER_ID);
+
+    if (!headerElem) {
+      return;
+    }
+
     const getHtml = (epic) => {
       const elem = Utils.getHtmlFromString(`<span
         class="aui-label ghx-jira-plugin-epic-selector"
@@ -226,8 +233,11 @@ async function enhanceSprintBoard() {
 
       return elem;
     };
+
+    const elementId = 'ghx-header-epic-counts';
+
     const container = Utils.getHtmlFromString(`<div
-        id="ghx-header-epic-counts"
+        id="${elementId}"
         style="padding-top:5px;"
     >
         <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">
@@ -235,13 +245,7 @@ async function enhanceSprintBoard() {
         </span>
     </div>`);
 
-    const headerElem = document.querySelector(SPRINT_HEADER_ID);
-
-    if (!headerElem) {
-      return;
-    }
-
-    let existingElem = headerElem.querySelector('#ghx-header-epic-counts');
+    let existingElem = headerElem.querySelector(`#${elementId}`);
     if (existingElem) {
       existingElem.remove();
     }
@@ -250,7 +254,7 @@ async function enhanceSprintBoard() {
 
     epicCompletionData.sort((a, b) => b.totalCount - a.totalCount);
 
-    existingElem = document.getElementById('ghx-header-epic-counts');
+    existingElem = document.getElementById(elementId);
     for (const epic of epicCompletionData) {
       const epicHtml = getHtml(epic);
       existingElem.appendChild(epicHtml);
@@ -258,6 +262,11 @@ async function enhanceSprintBoard() {
   }
 
   function populateAssigneeData(assignedTasksData) {
+    const headerElem = document.querySelector(SPRINT_HEADER_ID);
+    if (!headerElem) {
+      return;
+    }
+
     const dataArray = Object.keys(assignedTasksData).reduce(
       (arr, d) => [
         ...arr,
@@ -273,6 +282,49 @@ async function enhanceSprintBoard() {
       return;
     }
 
+    const getHtml = (assigneeName, assigneeTasks) => {
+      const elem = Utils.getHtmlFromString(`<span 
+        class="aui-label ghx-jira-plugin-assignee-selector"
+        style="${assigneeName === 'Unassigned' ? '' : 'cursor: pointer;'} padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
+          ${assigneeName}: ${assigneeTasks}
+        </span>`);
+
+      function toggleAssigneeFilter(e, assignee) {
+        const isSelected = e.style.border.includes('blue');
+
+        if (!isSelected) {
+          sprintIssueFilters.byAssignee.set(assignee);
+          e.style.border = '1px solid blue';
+        } else {
+          sprintIssueFilters.byAssignee.reset();
+        }
+      }
+
+      if (assigneeName !== 'Unassigned') {
+        elem.addEventListener('click', (e) => {
+          toggleAssigneeFilter(e.target, assigneeName);
+        });
+      }
+
+      return elem;
+    };
+
+    const elementId = 'ghx-header-assignee-task-counts';
+
+    const container = Utils.getHtmlFromString(`<div id="${elementId}">
+      <span class="aui-label ghx-sprint-board-assignee-selector" style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">
+        ASSIGNED:
+      </span>
+    </div>`);
+
+    let existingElem = headerElem.querySelector(`#${elementId}`);
+    if (existingElem) {
+      existingElem.remove();
+    }
+
+    // insert after epics
+    Utils.insertAfter(document.getElementById('ghx-header-epic-counts'), container);
+
     dataArray.sort((a, b) => {
       if (a.name === 'Unassigned') {
         return -1;
@@ -283,18 +335,12 @@ async function enhanceSprintBoard() {
       return b.count - a.count;
     });
 
-    const getHtml = (asigneeName, assigneeTasks) =>
-      `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}"> ${asigneeName}: ${assigneeTasks} </span>`;
-    const elementId = 'ghx-header-assignee-task-counts';
-    let htmlString = `<div id="${elementId}"> <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">ASSIGNED:</span>`;
+    existingElem = document.getElementById(elementId);
 
     for (const assignee of dataArray) {
       const epicHtml = getHtml(assignee.name, assignee.count);
-      htmlString += epicHtml;
+      existingElem.appendChild(epicHtml);
     }
-    htmlString += '</div>';
-
-    appendHtmlStringToHeader(`#${elementId}`, htmlString);
   }
 
   function getReviewerData(issueData) {

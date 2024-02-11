@@ -19,8 +19,11 @@ function resetIssueFilter() {
   setSprintSearchBarIcon('reset'); // do we need this?
 }
 
-function resetEpicFiltersCss() {
-  [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].forEach((elem) => {
+const JIRA_SPRINT_EPIC_SELECTOR_CLASS = 'ghx-jira-plugin-epic-selector';
+const JIRA_SPRINT_ASSIGNEE_SELECTOR_CLASS = 'ghx-jira-plugin-assignee-selector';
+
+function resetFilterSelectorCss(filterClassName) {
+  [...document.getElementsByClassName(filterClassName)].forEach((elem) => {
     // eslint-disable-next-line
     elem.style.border = '1px solid #f4f5f7';
   });
@@ -135,24 +138,38 @@ const sprintIssueFilters = {
     },
     set: (epicName) => {
       window.JIRA_PLUGIN_SPRINT_EPIC_FILTER = epicName;
-
-      resetEpicFiltersCss();
-
+      resetFilterSelectorCss(JIRA_SPRINT_EPIC_SELECTOR_CLASS);
       filterSprintIssuesV2();
     },
     reset: () => {
       window.JIRA_PLUGIN_SPRINT_EPIC_FILTER = null;
-      resetEpicFiltersCss();
+      resetFilterSelectorCss(JIRA_SPRINT_EPIC_SELECTOR_CLASS);
       filterSprintIssuesV2();
     },
   },
   byAssignee: {
+    init: () => {
+      const query = window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER;
+      if (!query) {
+        return;
+      }
+
+      const selected = [
+        ...document.getElementsByClassName('ghx-jira-plugin-assignee-selector'),
+      ].find((e) => e.innerText.includes(query));
+
+      if (selected) {
+        selected.style.border = '1px solid blue';
+      }
+    },
     set: (assigneeName) => {
       window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER = assigneeName;
+      resetFilterSelectorCss(JIRA_SPRINT_ASSIGNEE_SELECTOR_CLASS);
       filterSprintIssuesV2();
     },
     reset: () => {
       window.JIRA_PLUGIN_SPRINT_ASSIGNEE_FILTER = null;
+      resetFilterSelectorCss(JIRA_SPRINT_ASSIGNEE_SELECTOR_CLASS);
       filterSprintIssuesV2();
     },
   },
