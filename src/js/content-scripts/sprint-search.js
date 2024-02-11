@@ -67,6 +67,43 @@ function filterSprintIssuesV2(params = {}) {
 
   const cards = [...document.getElementsByClassName('ghx-issue')];
 
+  function checkEpicIsAllowed(epicName, card) {
+    if (epicName !== 'N/A') {
+      return card.innerText.toLowerCase().trim().includes(epic.toLowerCase().trim());
+    }
+
+    const allEpics = [...document.getElementsByClassName(JIRA_SPRINT_EPIC_SELECTOR_CLASS)]
+      .map((e) => {
+        const splitup = e.innerText.split('(');
+        splitup.pop();
+        return splitup.join('(').trim();
+      })
+      .filter((e) => e !== 'N/A');
+
+    const hasAtLeastOneEpic = allEpics.some((e) =>
+      card.innerText.toLowerCase().includes(e.toLowerCase()),
+    );
+
+    return !hasAtLeastOneEpic;
+  }
+
+  function checkAssigneeIsAllowed(assigneeFilter, cardAssignee) {
+    if (assignee !== 'Unassigned') {
+      return assigneeFilter === cardAssignee;
+    }
+
+    const allAssignees = [...document.getElementsByClassName(JIRA_SPRINT_ASSIGNEE_SELECTOR_CLASS)]
+      .map((a) => {
+        const splitup = a.innerText.split(':');
+        return splitup.shift();
+      })
+      .filter((a) => a !== 'Unassigned');
+
+    const hasAtLeastOneAssignee = allAssignees.some((a) => a === cardAssignee);
+
+    return !hasAtLeastOneAssignee;
+  }
+
   function isAllowed(card) {
     const checks = [];
 
@@ -75,14 +112,14 @@ function filterSprintIssuesV2(params = {}) {
     }
 
     if (epic) {
-      checks.push(card.innerText.toLowerCase().trim().includes(epic.toLowerCase().trim()));
+      checks.push(checkEpicIsAllowed(epic, card));
     }
 
     if (assignee) {
       const assigneeElement = card.querySelector('.ghx-avatar-img');
       if (assigneeElement) {
-        const assigneeName = assigneeElement.alt.split('Assignee: ').pop();
-        checks.push(assigneeName === assignee);
+        const cardAssignee = assigneeElement.alt.split('Assignee: ').pop();
+        checks.push(checkAssigneeIsAllowed(assignee, cardAssignee));
       }
     }
 
@@ -175,6 +212,7 @@ const sprintIssueFilters = {
   },
 };
 
+// eslint-disable-next-line no-unused-vars
 function initSprintFilters() {
   Object.keys(sprintIssueFilters).forEach((key) => {
     const fn = sprintIssueFilters[key].init;
@@ -185,6 +223,7 @@ function initSprintFilters() {
   });
 }
 
+// eslint-disable-next-line no-unused-vars
 function addSprintSearchBarBehavior() {
   const inputElement = document.getElementById('ghx-board-search-input');
 

@@ -210,7 +210,7 @@ async function enhanceSprintBoard() {
     const getHtml = (epic) => {
       const elem = Utils.getHtmlFromString(`<span
         class="aui-label ghx-jira-plugin-epic-selector"
-        style="${epic.epicName === 'N/A' ? '' : 'cursor: pointer;'} padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">
+        style="cursor: pointer; padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">
           ${epic.epicName} (${epic.doneCount}/${epic.totalCount})
       </span>`);
 
@@ -225,11 +225,9 @@ async function enhanceSprintBoard() {
         }
       }
 
-      if (epic.epicName !== 'N/A') {
-        elem.addEventListener('click', (e) => {
-          toggleEpicFilter(e.target, epic.epicName);
-        });
-      }
+      elem.addEventListener('click', (e) => {
+        toggleEpicFilter(e.target, epic.epicName);
+      });
 
       return elem;
     };
@@ -285,7 +283,7 @@ async function enhanceSprintBoard() {
     const getHtml = (assigneeName, assigneeTasks) => {
       const elem = Utils.getHtmlFromString(`<span 
         class="aui-label ghx-jira-plugin-assignee-selector"
-        style="${assigneeName === 'Unassigned' ? '' : 'cursor: pointer;'} padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
+        style="cursor: pointer; padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
           ${assigneeName}: ${assigneeTasks}
         </span>`);
 
@@ -300,11 +298,9 @@ async function enhanceSprintBoard() {
         }
       }
 
-      if (assigneeName !== 'Unassigned') {
-        elem.addEventListener('click', (e) => {
-          toggleAssigneeFilter(e.target, assigneeName);
-        });
-      }
+      elem.addEventListener('click', (e) => {
+        toggleAssigneeFilter(e.target, assigneeName);
+      });
 
       return elem;
     };
