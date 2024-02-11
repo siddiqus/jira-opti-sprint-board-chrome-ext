@@ -17,8 +17,10 @@
         "https://jira.sso.episerver.net/*"
       ],
       "js": [
+        "src/external/d3.min.js",
         "src/js/common/constants.js",
         "src/js/common/utils.js",
+        "src/js/content-scripts/custom-popup.js",
         "src/js/content-scripts/sprint-search.js",
         "src/js/content-scripts/enhance-sprint-board.js",
         "src/js/content-scripts/enhance-backlog.js",

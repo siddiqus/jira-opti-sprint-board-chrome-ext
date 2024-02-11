@@ -70,5 +70,6 @@ module.exports = {
       },
     ],
   },
-  plugins: ['prettier']
+  plugins: ['prettier'],
+  ignorePatterns: ['*.min.js'],
 };

@@ -3,6 +3,9 @@ async function run() {
 
   await enhanceSprintBoard();
   await enhanceBacklog();
+
+  // attachCustomPopupHtml();
+  // attachPopupButton();
 }
 
 async function loop(fn) {
