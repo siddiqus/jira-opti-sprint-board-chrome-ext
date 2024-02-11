@@ -527,17 +527,19 @@ async function enhanceSprintBoard() {
 
     const pairCounts = getReviewerPairs(issuesData);
 
-    const dataArray = Object.keys(pairCounts).reduce((obj, pair) => {
-      const [p1, p2] = pair.split('-').map((p) => p.split(' ').shift());
-      // first names only
-      const count = pairCounts[pair];
-      const newPair = {
-        p1,
-        p2,
-        count,
-      };
-      return [...obj, newPair];
-    }, []);
+    const dataArray = Object.keys(pairCounts)
+      .reduce((obj, pair) => {
+        const [p1, p2] = pair.split('-').map((p) => p.split(' ').shift());
+        // first names only
+        const count = pairCounts[pair];
+        const newPair = {
+          p1,
+          p2,
+          count,
+        };
+        return [...obj, newPair];
+      }, [])
+      .filter((p) => p.count > 2);
 
     dataArray.sort((a, b) => b.count - a.count);
 
@@ -549,7 +551,12 @@ async function enhanceSprintBoard() {
 
     const elementId = 'ghx-header-reviewer-pairs-counts';
     let htmlString = `<div id="${elementId}">
-    <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">REVIEW PAIRS:</span>
+      <span
+        title="High Frequency Review Pairs, for people pairing for reviews more than twice"
+        class="aui-label"
+        style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">
+        HFRP:
+      </span>
   `;
 
     dataArray.forEach((pairData) => {
