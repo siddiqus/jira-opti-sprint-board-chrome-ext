@@ -14,7 +14,7 @@ async function enhanceSprintBoard() {
     const nameRegex = /<div[^>]*>([\s\S]*?)<\/div>/;
     const match = htmlString.match(nameRegex);
     const extractedName = match ? match[1].trim() : null;
-    return extractedName ? extractedName.split(',').map((s) => s.trim()) : null;
+    return extractedName ? extractedName.split(',').map((s) => s.trim()) : [];
   }
 
   function getReviewersFromHtml(theIssue) {
@@ -75,6 +75,7 @@ async function enhanceSprintBoard() {
         isDone,
         status,
         timeElapsedInStatusInHours,
+        extraFields: issue.extraFields || [],
       };
     });
 
@@ -108,7 +109,7 @@ async function enhanceSprintBoard() {
     return issueData.filter((f) => !['To Do'].includes(f.status) && !f.isDone);
   }
 
-  function highlightInProgressIssuesHoursElapsed(issueData) {
+  function getAllIssueCardsByIssueKey() {
     const cards = [...document.getElementsByClassName('ghx-issue')];
 
     const htmlCardMap = cards.reduce((obj, card) => {
@@ -118,6 +119,12 @@ async function enhanceSprintBoard() {
         [id]: card,
       };
     }, {});
+
+    return htmlCardMap;
+  }
+
+  function highlightInProgressIssuesHoursElapsed(issueData) {
+    const htmlCardMap = getAllIssueCardsByIssueKey();
 
     for (const issue of issueData) {
       const htmlCard = htmlCardMap[issue.issueKey];
@@ -363,6 +370,26 @@ async function enhanceSprintBoard() {
     }
   }
 
+  function isStatusInReview(status) {
+    return (
+      (status.toLowerCase().includes('peer') || status.toLowerCase().includes('code')) &&
+      status.toLowerCase().includes('review')
+    );
+  }
+
+  function isStatusInProgressOrReview(status) {
+    return isStatusInReview(status) || status.toLowerCase().includes('in progress');
+  }
+
+  function getFreeReviewersSet(issueData) {
+    const allPeople = new Set(issueData.map((i) => i.assignee));
+    const inReview = issueData.filter((i) => isStatusInReview(i.status));
+
+    const reviewersInReview = new Set(inReview.flatMap((i) => i.reviewers));
+    const freeReviewers = Array.from(allPeople).filter((person) => !reviewersInReview.has(person));
+    return new Set(freeReviewers);
+  }
+
   function getReviewerData(issueData) {
     const reviewersMap = {};
 
@@ -379,48 +406,44 @@ async function enhanceSprintBoard() {
       }
     }
 
-    return reviewersMap;
-  }
+    const issuesByAssignee = Utils.groupBy(issueData, 'assignee');
+    Object.keys(issuesByAssignee).forEach((assignee) => {
+      const issuesForAssignee = issuesByAssignee[assignee] || [];
+      issuesByAssignee[assignee] = issuesForAssignee.filter((i) =>
+        isStatusInProgressOrReview(i.status),
+      );
+    });
 
-  function getFreeReviewersSet(issueData) {
-    const allPeople = new Set(issueData.map((i) => i.assignee));
-    const inReview = issueData.filter(
-      (i) =>
-        (i.status.toLowerCase().includes('peer') || i.status.toLowerCase().includes('code')) &&
-        i.status.toLowerCase().includes('review'),
+    // ignore todo tickets under Anis bhai's name.
+    const allPeople = Array.from(new Set(issueData.map((i) => i.assignee))).filter(
+      (p) => p !== 'Anisul Hoque',
     );
 
-    const reviewersInReview = new Set(inReview.flatMap((i) => i.reviewers));
-    const freeReviewers = Array.from(allPeople).filter((person) => !reviewersInReview.has(person));
-    return new Set(freeReviewers);
+    const freeReviewersSet = getFreeReviewersSet(issueData, reviewersMap);
+
+    const dataArray = allPeople.reduce((arr, name) => {
+      const issuesForAssignee = issuesByAssignee[name] || [];
+      const isFree = freeReviewersSet.has(name) && issuesForAssignee.length < 3; // max 3 allowed in progress for review
+      const count = reviewersMap[name] ? reviewersMap[name].length : 0;
+
+      const newArr = [
+        ...arr,
+        {
+          name,
+          count,
+          isFree,
+        },
+      ];
+      return newArr;
+    }, []);
+
+    dataArray.sort((a, b) => b.count - a.count);
+
+    return dataArray;
   }
 
   function populateReviewerData(issueData) {
-    const reviewerData = getReviewerData(issueData);
-
-    if (!Object.keys(reviewerData).length) {
-      return;
-    }
-
-    const allPeople = Array.from(new Set(issueData.map((i) => i.assignee)));
-
-    const freeReviewersSet = getFreeReviewersSet(issueData, reviewerData);
-
-    const dataArray = allPeople
-      .reduce(
-        (arr, name) => [
-          ...arr,
-          {
-            name,
-            count: reviewerData[name] ? reviewerData[name].length : 0,
-            isFree: freeReviewersSet.has(name),
-          },
-        ],
-        [],
-      )
-      .filter((n) => n.name !== 'Unassigned');
-
-    dataArray.sort((a, b) => b.count - a.count);
+    const dataArray = getReviewerData(issueData);
 
     const getHtml = (
       reviewer,
@@ -474,9 +497,6 @@ async function enhanceSprintBoard() {
   }
 
   function renderProgressBar(issueData) {
-    if (!issueData.length) {
-      return;
-    }
     const parent = document.querySelector('.ghx-sprint-meta');
 
     const doneCount = issueData.filter((i) => i.isDone).length;
@@ -590,6 +610,57 @@ async function enhanceSprintBoard() {
     addSprintSearchBarBehavior();
   }
 
+  function getReviewerSuggestions(issueData) {
+    const inCodeReviewWithoutReviewer = issueData.filter(
+      (i) =>
+        (i.status.toLowerCase().includes('code review') ||
+          i.status.toLowerCase().includes('peer review')) &&
+        !(i.reviewers || []).length,
+    );
+
+    const peopleArray = getReviewerData(issueData); // all people
+
+    const availableReviewers = peopleArray.sort((a, b) => a.count - b.count);
+
+    // Iterate through issues and assign potential reviewers
+    const updatedIssueArray = inCodeReviewWithoutReviewer.map((issue, index) => {
+      const wrappedIndex = index % availableReviewers.length;
+
+      if (availableReviewers[wrappedIndex]) {
+        availableReviewers[wrappedIndex].count += 1; // increase the count for the assigned reviewer
+        return { ...issue, potentialReviewer: availableReviewers[wrappedIndex].name };
+      }
+      return issue;
+    });
+
+    return updatedIssueArray;
+  }
+
+  function renderReviewerSuggestions(issueData) {
+    const suggestions = getReviewerSuggestions(issueData);
+
+    const cardsByIssueKey = getAllIssueCardsByIssueKey();
+
+    for (const suggestion of suggestions) {
+      const { issueKey, extraFields, potentialReviewer } = suggestion;
+      const card = cardsByIssueKey[issueKey];
+      if (!card) {
+        continue;
+      }
+
+      const extraFieldsIndex = extraFields.findIndex((f) =>
+        f.label.toLowerCase().includes('code reviewer'),
+      );
+
+      const theReviewerFieldElem = card.querySelectorAll('.ghx-extra-field-row')[extraFieldsIndex];
+      // add suggestion if not there
+      if (theReviewerFieldElem && theReviewerFieldElem.innerText === 'None') {
+        const innerFieldContent = theReviewerFieldElem.querySelector('.ghx-extra-field-content');
+        innerFieldContent.innerText = `Suggested: ${potentialReviewer}`;
+      }
+    }
+  }
+
   async function run() {
     const boardUrl = getBoardUrl(baseUrl, rapidViewId);
 
@@ -602,6 +673,10 @@ async function enhanceSprintBoard() {
     }
 
     const issueData = getMappedIssueData(boardData);
+
+    if (!issueData.length) {
+      return;
+    }
 
     showStatusColumnCounts(issueData);
 
@@ -624,6 +699,8 @@ async function enhanceSprintBoard() {
     initSprintFilters();
 
     filterSprintIssuesV2();
+
+    renderReviewerSuggestions(issueData);
   }
 
   await run();
