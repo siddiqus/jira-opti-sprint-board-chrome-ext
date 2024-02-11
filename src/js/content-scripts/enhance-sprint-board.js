@@ -406,17 +406,19 @@ async function enhanceSprintBoard() {
 
     const freeReviewersSet = getFreeReviewersSet(issueData, reviewerData);
 
-    const dataArray = allPeople.reduce(
-      (arr, name) => [
-        ...arr,
-        {
-          name,
-          count: reviewerData[name] ? reviewerData[name].length : 0,
-          isFree: freeReviewersSet.has(name),
-        },
-      ],
-      [],
-    );
+    const dataArray = allPeople
+      .reduce(
+        (arr, name) => [
+          ...arr,
+          {
+            name,
+            count: reviewerData[name] ? reviewerData[name].length : 0,
+            isFree: freeReviewersSet.has(name),
+          },
+        ],
+        [],
+      )
+      .filter((n) => n.name !== 'Unassigned');
 
     dataArray.sort((a, b) => b.count - a.count);
 
