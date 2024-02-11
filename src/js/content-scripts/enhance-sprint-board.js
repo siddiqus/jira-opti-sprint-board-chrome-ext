@@ -258,7 +258,15 @@ async function enhanceSprintBoard() {
 
     Utils.insertAfter(document.getElementById('ghx-column-headers'), container);
 
-    epicCompletionData.sort((a, b) => b.totalCount - a.totalCount);
+    epicCompletionData.sort((a, b) => {
+      if (a.name === 'N/A') {
+        return -1;
+      }
+      if (b.name === 'N/A') {
+        return 1;
+      }
+      return b.totalCount - a.totalCount;
+    });
 
     existingElem = document.getElementById(elementId);
     for (const epic of epicCompletionData) {
