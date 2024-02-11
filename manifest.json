@@ -19,6 +19,7 @@
       "js": [
         "src/js/common/constants.js",
         "src/js/common/utils.js",
+        "src/js/content-scripts/sprint-search.js",
         "src/js/content-scripts/enhance-sprint-board.js",
         "src/js/content-scripts/enhance-backlog.js",
         "src/js/run.js"

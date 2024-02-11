@@ -179,7 +179,7 @@ async function enhanceSprintBoard() {
     if (typeof html === 'string') {
       htmlElem = Utils.getHtmlFromString(html);
     } else {
-      htmlEncode = html;
+      htmlElem = html;
     }
 
     const headerElem = document.querySelector(SPRINT_HEADER_ID);
@@ -196,119 +196,10 @@ async function enhanceSprintBoard() {
     }
   }
 
-  function setSearchIcon(mode) {
-    const iconElement = document.getElementById('ghx-board-search-icon');
-    // aui-iconfont-remove
-    if (mode === 'reset') {
-      iconElement.classList.remove('aui-iconfont-remove', 'aui-button');
-      iconElement.classList.add('aui-iconfont-search-small');
-    } else {
-      iconElement.classList.remove('aui-iconfont-search-small');
-      iconElement.classList.add('aui-iconfont-remove', 'aui-button');
-    }
-  }
-
-  function resetIssueFilter() {
-    [...document.getElementsByClassName('ghx-issue')].forEach((card) => {
-      // eslint-disable-next-line
-      card.style.display = 'block';
-    });
-
-    setSearchIcon('reset');
-
-    document.getElementById('ghx-board-search-input').value = '';
-  }
-
-  function filterIssues(query) {
-    if (!query || !query.trim()) {
-      // reset all cards
-      resetIssueFilter();
-      return;
-    }
-
-    // eslint-disable-next-line
-    query = query.trim();
-
-    const cards = [...document.getElementsByClassName('ghx-issue')];
-
-    cards.forEach((card) => {
-      const innerText = card.innerText.toLowerCase();
-
-      if (innerText.includes(query.toLowerCase())) {
-        // eslint-disable-next-line
-        card.style.display = 'block';
-      } else {
-        // eslint-disable-next-line
-        card.style.display = 'none';
-      }
-    });
-  }
-
-  function initialEpicFilter() {
-    const query = window.JIRA_PLUGIN_EPIC_FILTER;
-    if (!query) {
-      return;
-    }
-
-    filterIssues(query);
-    const selected = [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].find(
-      (e) => e.innerText.includes(query),
-    );
-
-    if (selected) {
-      selected.style.border = '1px solid blue';
-    }
-  }
-
-  function resetEpicFiltersCss() {
-    [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].forEach((elem) => {
-      // eslint-disable-next-line
-      elem.style.border = '1px solid #f4f5f7';
-    });
-  }
-
   function populateEpicCompletionData(epicCompletionData) {
     if (!epicCompletionData.length) {
       return;
     }
-    const getHtml = (epic) => {
-      const elem = Utils.getHtmlFromString(`<span
-        class="aui-label ghx-jira-plugin-epic-selector"
-        style="${epic.epicName === 'N/A' ? '' : 'cursor: pointer;'} padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">
-          ${epic.epicName} (${epic.doneCount}/${epic.totalCount})
-      </span>`);
-
-      function toggleEpicFilter(e, epicName) {
-        const isSelected = e.style.border.includes('blue');
-
-        resetEpicFiltersCss();
-
-        if (!isSelected) {
-          e.style.border = '1px solid blue';
-          filterIssues(epicName);
-          window.JIRA_PLUGIN_EPIC_FILTER = epicName;
-        } else {
-          window.JIRA_PLUGIN_EPIC_FILTER = null;
-          resetIssueFilter();
-        }
-      }
-
-      if (epic.epicName !== 'N/A') {
-        elem.addEventListener('click', (e) => {
-          toggleEpicFilter(e.target, epic.epicName);
-        });
-      }
-
-      return elem;
-    };
-    const container = Utils.getHtmlFromString(`<div
-        id="ghx-header-epic-counts"
-        style="padding-top:5px;"
-    >
-        <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">
-            EPICS:
-        </span>
-    </div>`);
 
     const headerElem = document.querySelector(SPRINT_HEADER_ID);
 
@@ -316,7 +207,43 @@ async function enhanceSprintBoard() {
       return;
     }
 
-    let existingElem = headerElem.querySelector('#ghx-header-epic-counts');
+    const getHtml = (epic) => {
+      const elem = Utils.getHtmlFromString(`<span
+        class="aui-label ghx-jira-plugin-epic-selector"
+        style="cursor: pointer; padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">
+          ${epic.epicName} (${epic.doneCount}/${epic.totalCount})
+      </span>`);
+
+      function toggleEpicFilter(e, epicName) {
+        const isSelected = e.style.border.includes('blue');
+
+        if (!isSelected) {
+          sprintIssueFilters.byEpic.set(epicName);
+          e.style.border = '1px solid blue';
+        } else {
+          sprintIssueFilters.byEpic.reset();
+        }
+      }
+
+      elem.addEventListener('click', (e) => {
+        toggleEpicFilter(e.target, epic.epicName);
+      });
+
+      return elem;
+    };
+
+    const elementId = 'ghx-header-epic-counts';
+
+    const container = Utils.getHtmlFromString(`<div
+        id="${elementId}"
+        style="padding-top:5px;"
+    >
+        <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">
+            EPICS:
+        </span>
+    </div>`);
+
+    let existingElem = headerElem.querySelector(`#${elementId}`);
     if (existingElem) {
       existingElem.remove();
     }
@@ -325,7 +252,7 @@ async function enhanceSprintBoard() {
 
     epicCompletionData.sort((a, b) => b.totalCount - a.totalCount);
 
-    existingElem = document.getElementById('ghx-header-epic-counts');
+    existingElem = document.getElementById(elementId);
     for (const epic of epicCompletionData) {
       const epicHtml = getHtml(epic);
       existingElem.appendChild(epicHtml);
@@ -333,6 +260,11 @@ async function enhanceSprintBoard() {
   }
 
   function populateAssigneeData(assignedTasksData) {
+    const headerElem = document.querySelector(SPRINT_HEADER_ID);
+    if (!headerElem) {
+      return;
+    }
+
     const dataArray = Object.keys(assignedTasksData).reduce(
       (arr, d) => [
         ...arr,
@@ -348,6 +280,47 @@ async function enhanceSprintBoard() {
       return;
     }
 
+    const getHtml = (assigneeName, assigneeTasks) => {
+      const elem = Utils.getHtmlFromString(`<span 
+        class="aui-label ghx-jira-plugin-assignee-selector"
+        style="cursor: pointer; padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
+          ${assigneeName}: ${assigneeTasks}
+        </span>`);
+
+      function toggleAssigneeFilter(e, assignee) {
+        const isSelected = e.style.border.includes('blue');
+
+        if (!isSelected) {
+          sprintIssueFilters.byAssignee.set(assignee);
+          e.style.border = '1px solid blue';
+        } else {
+          sprintIssueFilters.byAssignee.reset();
+        }
+      }
+
+      elem.addEventListener('click', (e) => {
+        toggleAssigneeFilter(e.target, assigneeName);
+      });
+
+      return elem;
+    };
+
+    const elementId = 'ghx-header-assignee-task-counts';
+
+    const container = Utils.getHtmlFromString(`<div id="${elementId}">
+      <span class="aui-label ghx-sprint-board-assignee-selector" style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">
+        ASSIGNED:
+      </span>
+    </div>`);
+
+    let existingElem = headerElem.querySelector(`#${elementId}`);
+    if (existingElem) {
+      existingElem.remove();
+    }
+
+    // insert after epics
+    Utils.insertAfter(document.getElementById('ghx-header-epic-counts'), container);
+
     dataArray.sort((a, b) => {
       if (a.name === 'Unassigned') {
         return -1;
@@ -358,18 +331,12 @@ async function enhanceSprintBoard() {
       return b.count - a.count;
     });
 
-    const getHtml = (asigneeName, assigneeTasks) =>
-      `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}"> ${asigneeName}: ${assigneeTasks} </span>`;
-    const elementId = 'ghx-header-assignee-task-counts';
-    let htmlString = `<div id="${elementId}"> <span class="aui-label" style="padding: 5px; font-weight: 600; font-size: ${HEADER_STATS_FONT_SIZE}">ASSIGNED:</span>`;
+    existingElem = document.getElementById(elementId);
 
     for (const assignee of dataArray) {
       const epicHtml = getHtml(assignee.name, assignee.count);
-      htmlString += epicHtml;
+      existingElem.appendChild(epicHtml);
     }
-    htmlString += '</div>';
-
-    appendHtmlStringToHeader(`#${elementId}`, htmlString);
   }
 
   function getReviewerData(issueData) {
@@ -568,51 +535,18 @@ async function enhanceSprintBoard() {
     appendHtmlStringToHeader(`#${elementId}`, htmlString);
   }
 
-  function addSearchBehavior() {
-    const inputElement = document.getElementById('ghx-board-search-input');
-
-    inputElement.addEventListener('input', (e) => {
-      resetEpicFiltersCss();
-
-      const query = e.target.value;
-      window.GHX_SPRINT_BOARD_SEARCH_VALUE = query;
-      filterIssues(query);
-
-      if (query.length > 0) {
-        setSearchIcon('search');
-      } else {
-        setSearchIcon('reset');
-      }
-    });
-
-    inputElement.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' || event.keyCode === 27) {
-        resetIssueFilter();
-      }
-    });
-
-    const iconElement = document.getElementById('ghx-board-search-icon');
-
-    iconElement.addEventListener('click', () => {
-      if (window.GHX_SPRINT_BOARD_SEARCH_VALUE && window.GHX_SPRINT_BOARD_SEARCH_VALUE.length > 0) {
-        resetIssueFilter();
-      }
-    });
-  }
-
   async function renderSearchHtmlElement() {
     const existingElem = document.getElementById('ghx-board-search-container');
     if (existingElem) {
-      filterIssues(window.GHX_SPRINT_BOARD_SEARCH_VALUE);
       return;
     }
 
     const html = `<div
   id="ghx-board-search-container"
-  style="position: absolute;top: 0;right: 20px;width: 196px;border: 1px solid lightgray;border-radius: 3px;padding: 8px 10px;"
+  style="position: absolute;top: 0;right: 20px;width: 196px;border: 1px solid lightgray;border-radius: 3px;padding: 4px 10px;"
 >
   <input id="ghx-board-search-input" placeholder="Search here" spellcheck="false" style="border: none; border-radius: 3px; color: #666; width: 170px;"></input>
-  <span id="ghx-board-search-icon" class="js-search-trigger ghx-iconfont aui-icon aui-icon-small aui-iconfont-search-small" style="position: absolute; right: 10px; top: 28%; color: #666; background: white;">
+  <span id="ghx-board-search-icon" class="js-search-trigger ghx-iconfont aui-icon aui-icon-small aui-iconfont-search-small" style="position: absolute; right: 10px; top: 24%; color: #666; background: white;">
   </span>
 </div>`;
 
@@ -620,7 +554,7 @@ async function enhanceSprintBoard() {
     const parent = document.getElementById('ghx-operations');
     parent.appendChild(element);
 
-    addSearchBehavior();
+    addSprintSearchBarBehavior();
   }
 
   async function run() {
@@ -653,7 +587,10 @@ async function enhanceSprintBoard() {
       populateReviewerPairData(issueData);
     }
     renderSearchHtmlElement();
-    initialEpicFilter();
+
+    initSprintFilters();
+
+    filterSprintIssuesV2();
   }
 
   await run();
