@@ -26,6 +26,7 @@ For Edge:
 - Shows which user currently does not have any issues under 'Review' - i.e. who is free to review
 - Shows issue count per column
 - Shows common pairs for code reviews (Can be enabled from options)
+- Shows suggestion for code reviewer in the ticket if it is in the review column and reviewer is not assigned
 
 
 ## Use Cases
