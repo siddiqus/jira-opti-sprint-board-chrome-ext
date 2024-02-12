@@ -632,11 +632,21 @@ async function enhanceSprintBoard() {
     // Iterate through issues and assign potential reviewers
     const updatedIssueArray = inCodeReviewWithoutReviewer.map((issue, index) => {
       const wrappedIndex = index % availableReviewers.length;
+      const nextIndex = (wrappedIndex + 1) % availableReviewers.length;
 
+      const suggestedReviewers = [];
       if (availableReviewers[wrappedIndex]) {
-        availableReviewers[wrappedIndex].count += 1; // increase the count for the assigned reviewer
-        return { ...issue, potentialReviewer: availableReviewers[wrappedIndex].name };
+        suggestedReviewers.push(availableReviewers[wrappedIndex].name.split(' ').shift());
       }
+
+      if (availableReviewers[nextIndex]) {
+        suggestedReviewers.push(availableReviewers[nextIndex].name.split(' ').shift());
+      }
+
+      if (suggestedReviewers.length) {
+        return { ...issue, potentialReviewer: suggestedReviewers.join(' | ') };
+      }
+
       return issue;
     });
 
