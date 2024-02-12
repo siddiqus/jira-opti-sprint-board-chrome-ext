@@ -15,9 +15,21 @@ const options = {
 };
 
 const localStorageService = (() => ({
-  get: async (key) => chrome.storage.sync.get([key]).then((result) => result[key]),
+  get: async (key) => {
+    try {
+      return chrome.storage.sync.get([key]).then((result) => result[key]);
+    } catch (error) {
+      console.error(error);
+      return undefined;
+    }
+  },
   set: (key, value) => {
-    chrome.storage.sync.set({ [key]: value });
+    try {
+      chrome.storage.sync.set({ [key]: value });
+    } catch (error) {
+      console.error(error);
+      return;
+    }
   },
 }))();
 
