@@ -540,6 +540,13 @@ async function enhanceSprintBoard() {
     return pairCounts;
   }
 
+  function removeReviewerPairData() {
+    const elem = document.getElementById('ghx-header-reviewer-pairs-counts');
+    if (elem) {
+      elem.remove();
+    }
+  }
+
   function populateReviewerPairData(issuesData) {
     if (!issuesData.length) {
       return;
@@ -693,6 +700,8 @@ async function enhanceSprintBoard() {
     populateReviewerData(issueData);
     if (await localStorageService.get(options.flags.SHOW_REVIEW_PAIRS_ENABLED)) {
       populateReviewerPairData(issueData);
+    } else {
+      removeReviewerPairData();
     }
     renderSearchHtmlElement();
 
