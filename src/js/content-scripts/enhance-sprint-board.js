@@ -416,7 +416,7 @@ async function enhanceSprintBoard() {
 
     // ignore todo tickets under Anis bhai's name.
     const allPeople = Array.from(new Set(issueData.map((i) => i.assignee))).filter(
-      (p) => p !== 'Anisul Hoque',
+      (p) => !['Anisul Hoque', 'Ahmed Anough', 'Unassigned'].includes(p), // exclude POs and unassigned
     );
 
     const freeReviewersSet = getFreeReviewersSet(issueData, reviewersMap);
