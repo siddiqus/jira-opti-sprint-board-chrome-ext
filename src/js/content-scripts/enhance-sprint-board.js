@@ -282,32 +282,36 @@ async function enhanceSprintBoard() {
     }
   }
 
-  function populateAssigneeData(assignedTasksData) {
+  function populateAssigneeData(issueData) {
     const headerElem = document.querySelector(SPRINT_HEADER_ID);
     if (!headerElem) {
       return;
     }
 
-    const dataArray = Object.keys(assignedTasksData).reduce(
-      (arr, d) => [
-        ...arr,
-        {
-          name: d,
-          count: assignedTasksData[d].length,
-        },
-      ],
-      [],
-    );
+    const assignedTasksData = Utils.groupBy(issueData, 'assignee');
+
+    const freePeople = getFreeReviewersSet(issueData);
+
+    const dataArray = Object.keys(assignedTasksData).reduce((arr, assigneeName) => {
+      const isFree =
+        freePeople.has(assigneeName) && (assignedTasksData[assigneeName] || []).length < 3;
+      const person = {
+        name: assigneeName,
+        count: assignedTasksData[assigneeName].length,
+        isFree,
+      };
+      return [...arr, person];
+    }, []);
 
     if (!dataArray.length) {
       return;
     }
 
-    const getHtml = (assigneeName, assigneeTasks) => {
+    const getHtml = (assignee) => {
       const elem = Utils.getHtmlFromString(`<span 
         class="aui-label ghx-jira-plugin-assignee-selector"
         style="cursor: pointer; padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
-          ${assigneeName}: ${assigneeTasks}
+          ${assignee.name}: ${assignee.count} ${assignee.isFree ? '(free)' : ''}
         </span>`);
 
       function toggleAssigneeFilter(e, assignee) {
@@ -365,7 +369,7 @@ async function enhanceSprintBoard() {
     existingElem = document.getElementById(elementId);
 
     for (const assignee of dataArray) {
-      const epicHtml = getHtml(assignee.name, assignee.count);
+      const epicHtml = getHtml(assignee);
       existingElem.appendChild(epicHtml);
     }
   }
@@ -706,7 +710,7 @@ async function enhanceSprintBoard() {
     }
 
     populateEpicCompletionData(getEpicCompletionData(issueData));
-    populateAssigneeData(Utils.groupBy(issueData, 'assignee'));
+    populateAssigneeData(issueData);
     populateReviewerData(issueData);
     if (await localStorageService.get(options.flags.SHOW_REVIEW_PAIRS_ENABLED)) {
       populateReviewerPairData(issueData);
