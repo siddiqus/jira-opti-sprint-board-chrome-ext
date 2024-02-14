@@ -14,7 +14,7 @@ For Edge:
 
 ## JIRA Sprint Board Enhancements
 
-<img width="1688" alt="image" src="https://github.com/siddiqus/jira-opti-sprint-board-chrome-ext/assets/5023858/6eafa525-acb3-442f-8a08-284f88d8ddf4">
+<img width="1686" alt="image" src="https://github.com/siddiqus/jira-opti-sprint-board-chrome-ext/assets/5023858/fd7cdc42-ba0b-48ab-9a21-4be8026f0297">
 
 ### Features:
 - Sprint completion progress bar
@@ -26,6 +26,7 @@ For Edge:
 - Shows which user currently does not have any issues under 'Review' - i.e. who is free to review
 - Shows issue count per column
 - Shows common pairs for code reviews (Can be enabled from options)
+- Shows suggestion for code reviewer in the ticket if it is in the review column and reviewer is not assigned
 
 
 ## Use Cases
