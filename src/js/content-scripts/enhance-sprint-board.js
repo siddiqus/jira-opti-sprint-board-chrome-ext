@@ -62,9 +62,12 @@ async function enhanceSprintBoard() {
       const status = getStatusNameFromId(statuses, issue.statusId);
       const isDone = issue.done || status === 'Done';
 
-      const timeElapsedInStatusInHours = issue.timeInColumn
-        ? Math.floor((Date.now() - issue.timeInColumn.enteredStatus) / 1000 / 60 / 60)
-        : 0;
+      const timeElapsedInStatusInHours = Math.max(
+        0,
+        issue.timeInColumn
+          ? Math.floor((Date.now() - issue.timeInColumn.enteredStatus) / 1000 / 60 / 60)
+          : 0,
+      );
 
       return {
         issueKey,
