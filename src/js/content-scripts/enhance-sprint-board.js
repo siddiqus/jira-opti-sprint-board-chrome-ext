@@ -716,7 +716,7 @@ async function enhanceSprintBoard() {
       // add suggestion if not there
       if (theReviewerFieldElem && theReviewerFieldElem.innerText === 'None') {
         const innerFieldContent = theReviewerFieldElem.querySelector('.ghx-extra-field-content');
-        innerFieldContent.innerText = `Suggested: ${potentialReviewer}`;
+        innerFieldContent.innerText = `Suggested Reviewer: ${potentialReviewer}`;
       }
     }
   }
