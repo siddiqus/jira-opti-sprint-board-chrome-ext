@@ -1,5 +1,5 @@
 // eslint-disable-next-line
-const SPRINT_HEADER_ID = '#ghx-column-header-group';
+const CUSTOM_SPRINT_STATS_WRAPPER_ID = 'ghx-custom-stats-wrapper';
 
 // eslint-disable-next-line
 const TIME_ELAPSED_CLASS_NAME = 'ghx-issue-time-elapsed';
@@ -28,7 +28,6 @@ const localStorageService = (() => ({
       chrome.storage.sync.set({ [key]: value });
     } catch (error) {
       console.error(error);
-      return;
     }
   },
 }))();

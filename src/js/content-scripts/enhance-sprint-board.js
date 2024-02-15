@@ -126,7 +126,16 @@ async function enhanceSprintBoard() {
     return htmlCardMap;
   }
 
-  function highlightInProgressIssuesHoursElapsed(issueData) {
+  async function highlightInProgressIssuesHoursElapsed(issueData) {
+    if (!issueData.length) {
+      return;
+    }
+
+    if (!(await localStorageService.get(options.flags.HOURS_IN_STATUS_ENABLED))) {
+      [...document.getElementsByClassName(TIME_ELAPSED_CLASS_NAME)].forEach((q) => q.remove());
+      return;
+    }
+
     const htmlCardMap = getAllIssueCardsByIssueKey();
 
     for (const issue of issueData) {
@@ -184,6 +193,29 @@ async function enhanceSprintBoard() {
     return results;
   }
 
+  function _getStatsWrapper() {
+    let statsWrapperElem = document.getElementById(CUSTOM_SPRINT_STATS_WRAPPER_ID);
+
+    if (!statsWrapperElem) {
+      const headerElem = document.getElementById('ghx-pool-column');
+      if (!headerElem) {
+        return null;
+      }
+
+      const statsWrapper = Utils.getHtmlFromString(
+        `<div id="${CUSTOM_SPRINT_STATS_WRAPPER_ID}"
+          style="margin-left: 10px; margin-bottom: -10px; z-index: 15;"
+        >
+        </div>`,
+      );
+      headerElem.insertBefore(statsWrapper, headerElem.firstChild);
+
+      statsWrapperElem = document.getElementById(CUSTOM_SPRINT_STATS_WRAPPER_ID);
+    }
+
+    return statsWrapperElem;
+  }
+
   function appendHtmlStringToHeader(newElementSelector, html) {
     let htmlElem;
     if (typeof html === 'string') {
@@ -192,18 +224,18 @@ async function enhanceSprintBoard() {
       htmlElem = html;
     }
 
-    const headerElem = document.querySelector(SPRINT_HEADER_ID);
+    const headerElem = _getStatsWrapper();
 
     if (!headerElem) {
       return;
     }
 
     const existingElem = headerElem.querySelector(newElementSelector);
-    if (!existingElem) {
-      headerElem.appendChild(htmlElem);
-    } else {
-      existingElem.innerHTML = htmlElem.innerHTML;
+    if (existingElem) {
+      existingElem.remove();
     }
+
+    headerElem.appendChild(htmlElem);
   }
 
   function populateEpicCompletionData(epicCompletionData) {
@@ -211,7 +243,7 @@ async function enhanceSprintBoard() {
       return;
     }
 
-    const headerElem = document.querySelector(SPRINT_HEADER_ID);
+    const headerElem = _getStatsWrapper();
 
     if (!headerElem) {
       return;
@@ -266,7 +298,7 @@ async function enhanceSprintBoard() {
       existingElem.remove();
     }
 
-    Utils.insertAfter(document.getElementById('ghx-column-headers'), container);
+    headerElem.appendChild(container);
 
     epicCompletionData.sort((a, b) => {
       if (a.name === 'N/A') {
@@ -285,8 +317,24 @@ async function enhanceSprintBoard() {
     }
   }
 
+  function isStatusInReview(status) {
+    return (
+      (status.toLowerCase().includes('peer') || status.toLowerCase().includes('code')) &&
+      status.toLowerCase().includes('review')
+    );
+  }
+
+  function getFreeReviewersSet(issueData) {
+    const allPeople = new Set(issueData.map((i) => i.assignee));
+    const inReview = issueData.filter((i) => isStatusInReview(i.status));
+
+    const reviewersInReview = new Set(inReview.flatMap((i) => i.reviewers));
+    const freeReviewers = Array.from(allPeople).filter((person) => !reviewersInReview.has(person));
+    return new Set(freeReviewers);
+  }
+
   function populateAssigneeData(issueData) {
-    const headerElem = document.querySelector(SPRINT_HEADER_ID);
+    const headerElem = _getStatsWrapper();
     if (!headerElem) {
       return;
     }
@@ -356,8 +404,7 @@ async function enhanceSprintBoard() {
       existingElem.remove();
     }
 
-    // insert after epics
-    Utils.insertAfter(document.getElementById('ghx-header-epic-counts'), container);
+    headerElem.appendChild(container);
 
     dataArray.sort((a, b) => {
       if (a.name === 'Unassigned') {
@@ -377,24 +424,8 @@ async function enhanceSprintBoard() {
     }
   }
 
-  function isStatusInReview(status) {
-    return (
-      (status.toLowerCase().includes('peer') || status.toLowerCase().includes('code')) &&
-      status.toLowerCase().includes('review')
-    );
-  }
-
   function isStatusInProgressOrReview(status) {
     return isStatusInReview(status) || status.toLowerCase().includes('in progress');
-  }
-
-  function getFreeReviewersSet(issueData) {
-    const allPeople = new Set(issueData.map((i) => i.assignee));
-    const inReview = issueData.filter((i) => isStatusInReview(i.status));
-
-    const reviewersInReview = new Set(inReview.flatMap((i) => i.reviewers));
-    const freeReviewers = Array.from(allPeople).filter((person) => !reviewersInReview.has(person));
-    return new Set(freeReviewers);
   }
 
   function getReviewerData(issueData) {
@@ -554,8 +585,13 @@ async function enhanceSprintBoard() {
     }
   }
 
-  function populateReviewerPairData(issuesData) {
+  async function populateReviewerPairData(issuesData) {
     if (!issuesData.length) {
+      return;
+    }
+
+    if (!(await localStorageService.get(options.flags.SHOW_REVIEW_PAIRS_ENABLED))) {
+      removeReviewerPairData();
       return;
     }
 
@@ -685,6 +721,15 @@ async function enhanceSprintBoard() {
     }
   }
 
+  async function renderStats(issueData) {
+    populateEpicCompletionData(getEpicCompletionData(issueData));
+    populateAssigneeData(issueData);
+
+    populateReviewerData(issueData);
+
+    await populateReviewerPairData(issueData);
+  }
+
   async function run() {
     const boardUrl = getBoardUrl(baseUrl, rapidViewId);
 
@@ -706,27 +751,17 @@ async function enhanceSprintBoard() {
 
     renderProgressBar(issueData);
 
-    if (await localStorageService.get(options.flags.HOURS_IN_STATUS_ENABLED)) {
-      highlightInProgressIssuesHoursElapsed(getInProgressIssues(issueData));
-    } else {
-      [...document.getElementsByClassName(TIME_ELAPSED_CLASS_NAME)].forEach((q) => q.remove());
-    }
+    await highlightInProgressIssuesHoursElapsed(getInProgressIssues(issueData));
 
-    populateEpicCompletionData(getEpicCompletionData(issueData));
-    populateAssigneeData(issueData);
-    populateReviewerData(issueData);
-    if (await localStorageService.get(options.flags.SHOW_REVIEW_PAIRS_ENABLED)) {
-      populateReviewerPairData(issueData);
-    } else {
-      removeReviewerPairData();
-    }
-    renderSearchHtmlElement();
+    await renderSearchHtmlElement();
 
     initSprintFilters();
 
     filterSprintIssuesV2();
 
     renderReviewerSuggestions(issueData);
+
+    await renderStats(issueData);
   }
 
   await run();
