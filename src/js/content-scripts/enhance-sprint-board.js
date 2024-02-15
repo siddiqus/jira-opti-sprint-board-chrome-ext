@@ -317,11 +317,11 @@ async function enhanceSprintBoard() {
           ${assignee.name}: ${assignee.count} ${assignee.isFree ? '(free)' : ''}
         </span>`);
 
-      function toggleAssigneeFilter(e, assignee) {
+      function toggleAssigneeFilter(e, assigneeName) {
         const isSelected = e.style.border.includes('blue');
 
         if (!isSelected) {
-          sprintIssueFilters.byAssignee.set(assignee);
+          sprintIssueFilters.byAssignee.set(assigneeName);
           e.style.border = '1px solid blue';
         } else {
           sprintIssueFilters.byAssignee.reset();
@@ -329,7 +329,7 @@ async function enhanceSprintBoard() {
       }
 
       elem.addEventListener('click', (e) => {
-        toggleAssigneeFilter(e.target, assigneeName);
+        toggleAssigneeFilter(e.target, assignee.name);
       });
 
       elem.addEventListener('mouseover', () => {
