@@ -655,6 +655,9 @@ async function enhanceSprintBoard() {
 
     const element = Utils.getHtmlFromString(html);
     const parent = document.getElementById('ghx-operations');
+    if (parent) {
+      return;
+    }
     parent.appendChild(element);
 
     addSprintSearchBarBehavior();
@@ -755,13 +758,13 @@ async function enhanceSprintBoard() {
 
     await renderSearchHtmlElement();
 
-    initSprintFilters();
-
     filterSprintIssuesV2();
 
     renderReviewerSuggestions(issueData);
 
     await renderStats(issueData);
+
+    initSprintFilters();
   }
 
   await run();

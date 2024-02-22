@@ -165,7 +165,7 @@ const sprintIssueFilters = {
         return;
       }
 
-      const selected = [...document.getElementsByClassName('ghx-jira-plugin-epic-selector')].find(
+      const selected = [...document.getElementsByClassName(JIRA_SPRINT_EPIC_SELECTOR_CLASS)].find(
         (e) => e.innerText.includes(query),
       );
 
