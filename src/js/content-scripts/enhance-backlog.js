@@ -66,7 +66,7 @@ async function enhanceBacklog() {
   }
 
   issuesLists.forEach((issueList) => {
-    issueList.addEventListener('click', async () => {
+    issueList.addEventListener('click', async function () {
       await Utils.delay(100);
       // to give time for the selected class to be appended
       try {
