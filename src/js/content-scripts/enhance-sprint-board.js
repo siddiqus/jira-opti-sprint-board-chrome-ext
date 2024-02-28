@@ -197,14 +197,14 @@ async function enhanceSprintBoard() {
     let statsWrapperElem = document.getElementById(CUSTOM_SPRINT_STATS_WRAPPER_ID);
 
     if (!statsWrapperElem) {
-      const headerElem = document.getElementById('ghx-pool-column');
+      const headerElem = document.getElementById('ghx-column-header-group');
       if (!headerElem) {
         return null;
       }
 
       const statsWrapper = Utils.getHtmlFromString(
         `<div id="${CUSTOM_SPRINT_STATS_WRAPPER_ID}"
-          style="margin-left: 10px; margin-bottom: -10px; z-index: 15;"
+          style="margin-left: 10px; margin-bottom: -5px; z-index: 15;"
         >
         </div>`,
       );
@@ -537,10 +537,12 @@ async function enhanceSprintBoard() {
   function renderProgressBar(issueData) {
     const parent = document.querySelector('.ghx-sprint-meta');
 
-    const doneCount = issueData.filter((i) => i.isDone).length;
-    const totalCount = issueData.length;
+    const donePoints = issueData
+      .filter((i) => i.isDone)
+      .reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+    const totalPoints = issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
 
-    const percentage = totalCount > 0 ? Math.round((100 * doneCount) / totalCount) : 0;
+    const percentage = totalPoints > 0 ? Math.round((100 * donePoints) / totalPoints) : 0;
 
     const progressBarId = 'ghx-sprint-progress-bar-container';
 
@@ -548,7 +550,7 @@ async function enhanceSprintBoard() {
     const progressBarHtmlString = `<div id="${progressBarId}" style="float:left; border-radius: 2em; border: 1px solid gray; margin-left: 20px; margin-right: 20px; width: 200px; height: 26px; position: relative; display: inline-block;">
           <div id="ghx-progressBar" style="height: 26px; background: #3ea9ff;border-radius: ${progressBarBorderRadius};width: ${percentage}%;"></div>
           <span style="position: absolute; font-size: 12px; color: black; left: 25%; top: 18%; font-weight: 500; width: 100px; text-align: center;">
-              ${doneCount} / ${totalCount} points
+              ${donePoints} / ${totalPoints} points
           </span>
       </div>`;
 
