@@ -53,3 +53,22 @@ const Utils = {
     referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
   },
 };
+
+function clearSprintSearchBar() {
+  const elem = document.getElementById('ghx-board-search-container');
+  if (elem) {
+    elem.remove();
+  }
+}
+
+function removeSprintStatsBar() {
+  const statsWrapperElem = document.getElementById(CUSTOM_SPRINT_STATS_WRAPPER_ID);
+  if (statsWrapperElem) {
+    statsWrapperElem.remove();
+  }
+}
+
+function clearSprintEnhancements() {
+  clearSprintSearchBar();
+  removeSprintStatsBar();
+}

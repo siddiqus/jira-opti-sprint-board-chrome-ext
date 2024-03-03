@@ -13,13 +13,6 @@ async function enhanceBacklog() {
     return;
   }
 
-  function clearSprintSearchBar() {
-    const elem = document.getElementById('ghx-board-search-container');
-    if (elem) {
-      elem.remove();
-    }
-  }
-
   function getTotalPointsHtmlElement(elementId, points) {
     const str = `<div id="${elementId}" style="
   position: absolute;
@@ -79,5 +72,5 @@ async function enhanceBacklog() {
 
   window.ENHANCE_BACKLOG_LISTENERS_IS_ACTIVE = 1;
 
-  clearSprintSearchBar();
+  clearSprintEnhancements();
 }

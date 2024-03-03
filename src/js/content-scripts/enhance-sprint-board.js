@@ -197,15 +197,13 @@ async function enhanceSprintBoard() {
     let statsWrapperElem = document.getElementById(CUSTOM_SPRINT_STATS_WRAPPER_ID);
 
     if (!statsWrapperElem) {
-      const headerElem = document.getElementById('ghx-column-header-group');
+      const headerElem = document.getElementById('ghx-operations');
       if (!headerElem) {
         return null;
       }
 
       const statsWrapper = Utils.getHtmlFromString(
-        `<div id="${CUSTOM_SPRINT_STATS_WRAPPER_ID}"
-          style="margin-left: 10px; margin-bottom: -5px; z-index: 15;"
-        >
+        `<div id="${CUSTOM_SPRINT_STATS_WRAPPER_ID}" style="z-index: 15;">
         </div>`,
       );
       headerElem.insertBefore(statsWrapper, headerElem.firstChild);
@@ -542,7 +540,10 @@ async function enhanceSprintBoard() {
       .reduce((sum, i) => sum + (i.storyPoints || 0), 0);
     const totalPoints = issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
 
-    const percentage = totalPoints > 0 ? Math.round((100 * donePoints) / totalPoints) : 0;
+    let percentage = totalPoints > 0 ? Math.round((100 * donePoints) / totalPoints) : 0;
+    if (percentage <= 6) {
+      percentage = 6; // this is to make the progress bar start look pretty
+    }
 
     const progressBarId = 'ghx-sprint-progress-bar-container';
 
@@ -651,13 +652,13 @@ async function enhanceSprintBoard() {
   style="position: absolute;top: 0;right: 20px;width: 196px;border: 1px solid lightgray;border-radius: 3px;padding: 8px 10px;"
 >
   <input id="ghx-board-search-input" placeholder="Search here" spellcheck="false" style="border: none; border-radius: 3px; color: #666; width: 170px;"></input>
-  <span id="ghx-board-search-icon" class="js-search-trigger ghx-iconfont aui-icon aui-icon-small aui-iconfont-search-small" style="position: absolute; right: 10px; top: 24%; color: #666; background: white;">
+  <span id="ghx-board-search-icon" class="js-search-trigger ghx-iconfont aui-icon aui-icon-small aui-iconfont-search-small" style="position: absolute; right: 10px; top: 28%; color: #666; background: white;">
   </span>
 </div>`;
 
     const element = Utils.getHtmlFromString(html);
     const parent = document.getElementById('ghx-operations');
-    if (parent) {
+    if (!parent) {
       return;
     }
     parent.appendChild(element);
