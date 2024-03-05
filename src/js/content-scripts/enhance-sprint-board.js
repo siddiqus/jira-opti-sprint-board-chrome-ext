@@ -499,18 +499,27 @@ async function enhanceSprintBoard() {
   }
 
   function showStatusColumnCounts(issueData) {
-    const statusCountMap = issueData.reduce((map, issue) => {
-      const newMap = {
-        ...map,
-      };
-      const status = issue.status.toUpperCase();
-      if (newMap[status]) {
-        newMap[status] += 1;
-      } else {
-        newMap[status] = 1;
-      }
-      return newMap;
-    }, {});
+    const totalTasks = issueData.length;
+    const totalPoints = issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+
+    const { statusCountMap, pointsMap } = issueData.reduce(
+      (map, issue) => {
+        const status = issue.status.toUpperCase();
+
+        const newStatusMap = { ...map.statusCountMap };
+        newStatusMap[status] = (newStatusMap[status] || 0) + 1;
+        map.statusCountMap = newStatusMap;
+
+        const newPointsMap = { ...map.pointsMap };
+        newPointsMap[status] = (newPointsMap[status] || 0) + (issue.storyPoints || 0);
+        map.pointsMap = newPointsMap;
+        return map;
+      },
+      {
+        statusCountMap: {},
+        pointsMap: {},
+      },
+    );
 
     function sanitizeProductReviewHeading(header) {
       // for team 7 board
@@ -526,9 +535,13 @@ async function enhanceSprintBoard() {
       let columnStatus = headerTitleElem.innerText.trim().toUpperCase().split(' (')[0];
 
       columnStatus = sanitizeProductReviewHeading(columnStatus);
-      const statusCount = statusCountMap[columnStatus];
-      const newDisplayText = `${columnStatus} (${statusCount || 0})`;
-      headerTitleElem.innerText = newDisplayText;
+      const statusCount = statusCountMap[columnStatus] || 0;
+      const statusPoints = pointsMap[columnStatus] || 0;
+
+      const html = Utils.getHtmlFromString(
+        `<span>${columnStatus} <span style="color: #979797">(${statusCount || 0}/${totalTasks} Tasks, ${statusPoints}/${totalPoints} Points)</span><span>`,
+      );
+      headerTitleElem.innerHTML = html.innerHTML;
     });
   }
 
