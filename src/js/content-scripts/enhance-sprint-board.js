@@ -539,7 +539,7 @@ async function enhanceSprintBoard() {
       const statusPoints = pointsMap[columnStatus] || 0;
 
       const html = Utils.getHtmlFromString(
-        `<span>${columnStatus} <span style="color: #979797">(${statusCount || 0}/${totalTasks} Tasks, ${statusPoints}/${totalPoints} Points)</span><span>`,
+        `<span>${columnStatus} <span style="color: #909090; font-weight: 600;">(${statusCount || 0}/${totalTasks} Tasks, ${statusPoints}/${totalPoints} Points)</span><span>`,
       );
       headerTitleElem.innerHTML = html.innerHTML;
     });
