@@ -72,3 +72,18 @@ function clearSprintEnhancements() {
   clearSprintSearchBar();
   removeSprintStatsBar();
 }
+
+function isSprintBoard() {
+  const html = document.getElementById('ghx-work').innerHTML;
+  return html !== '';
+}
+
+function isBacklog() {
+  const html = document.getElementById('ghx-plan').innerHTML;
+  return html !== '';
+}
+
+function isReports() {
+  const html = document.getElementById('ghx-report').innerHTML;
+  return html !== '';
+}

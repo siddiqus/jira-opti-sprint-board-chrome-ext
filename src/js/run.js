@@ -1,8 +1,13 @@
 async function run() {
   setDefaults();
 
-  await enhanceSprintBoard();
-  await enhanceBacklog();
+  if (isBacklog()) {
+    await enhanceBacklog();
+  }
+
+  if (isSprintBoard()) {
+    await enhanceSprintBoard();
+  }
 }
 
 async function loop(fn) {
