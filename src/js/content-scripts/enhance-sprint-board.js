@@ -693,16 +693,18 @@ async function enhanceSprintBoard() {
 
     // Iterate through issues and assign potential reviewers
     const updatedIssueArray = inCodeReviewWithoutReviewer.map((issue, index) => {
-      const wrappedIndex = index % availableReviewers.length;
-      const nextIndex = (wrappedIndex + 1) % availableReviewers.length;
+      const potentialReviewers = availableReviewers.filter((a) => a !== issue.assignee);
+
+      const wrappedIndex = index % potentialReviewers.length;
+      const nextIndex = (wrappedIndex + 1) % potentialReviewers.length;
 
       const suggestedReviewers = [];
-      if (availableReviewers[wrappedIndex]) {
-        suggestedReviewers.push(availableReviewers[wrappedIndex].name.split(' ').shift());
+      if (potentialReviewers[wrappedIndex]) {
+        suggestedReviewers.push(potentialReviewers[wrappedIndex].name.split(' ').shift());
       }
 
-      if (availableReviewers[nextIndex]) {
-        suggestedReviewers.push(availableReviewers[nextIndex].name.split(' ').shift());
+      if (potentialReviewers[nextIndex]) {
+        suggestedReviewers.push(potentialReviewers[nextIndex].name.split(' ').shift());
       }
 
       if (suggestedReviewers.length) {
