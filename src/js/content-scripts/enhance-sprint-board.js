@@ -787,5 +787,3 @@ async function enhanceSprintBoard() {
 
   await run();
 }
-
-enhanceSprintBoard();
