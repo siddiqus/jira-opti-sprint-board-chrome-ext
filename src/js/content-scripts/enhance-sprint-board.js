@@ -342,12 +342,15 @@ async function enhanceSprintBoard() {
     const freePeople = getFreeReviewersSet(issueData);
 
     const dataArray = Object.keys(assignedTasksData).reduce((arr, assigneeName) => {
-      const isFree =
-        freePeople.has(assigneeName) && (assignedTasksData[assigneeName] || []).length < 3;
+      const assignedTasks = assignedTasksData[assigneeName] || [];
+      const totalPoints = assignedTasks.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+      const isFree = freePeople.has(assigneeName) && assignedTasks.length < 3;
+
       const person = {
         name: assigneeName,
-        count: assignedTasksData[assigneeName].length,
+        count: assignedTasks.length,
         isFree,
+        points: totalPoints,
       };
       return [...arr, person];
     }, []);
@@ -360,7 +363,7 @@ async function enhanceSprintBoard() {
       const elem = Utils.getHtmlFromString(`<span 
         class="aui-label ghx-jira-plugin-assignee-selector"
         style="cursor: pointer; padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
-          ${assignee.name}: ${assignee.count} ${assignee.isFree ? '(free)' : ''}
+          ${assignee.name}: ${assignee.count} (${assignee.points} pts) ${assignee.isFree ? '(free)' : ''}
         </span>`);
 
       function toggleAssigneeFilter(e, assigneeName) {
