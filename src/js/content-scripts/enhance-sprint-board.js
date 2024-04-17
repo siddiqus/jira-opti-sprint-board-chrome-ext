@@ -363,7 +363,7 @@ async function enhanceSprintBoard() {
       const elem = Utils.getHtmlFromString(`<span 
         class="aui-label ghx-jira-plugin-assignee-selector"
         style="cursor: pointer; padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
-          ${assignee.name}: ${assignee.count} (${assignee.points} pts) ${assignee.isFree ? '(free)' : ''}
+          ${assignee.name}: ${assignee.count} (${+Number(assignee.points).toFixed(2)} pts) ${assignee.isFree ? '(free)' : ''}
         </span>`);
 
       function toggleAssigneeFilter(e, assigneeName) {
@@ -503,7 +503,9 @@ async function enhanceSprintBoard() {
 
   function showStatusColumnCounts(issueData) {
     const totalTasks = issueData.length;
-    const totalPoints = issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+    const totalPoints = +Number(
+      issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0),
+    ).toFixed(2);
 
     const { statusCountMap, pointsMap } = issueData.reduce(
       (map, issue) => {
@@ -539,7 +541,7 @@ async function enhanceSprintBoard() {
 
       columnStatus = sanitizeProductReviewHeading(columnStatus);
       const statusCount = statusCountMap[columnStatus] || 0;
-      const statusPoints = pointsMap[columnStatus] || 0;
+      const statusPoints = +Number(pointsMap[columnStatus] || 0).toFixed(2);
 
       const html = Utils.getHtmlFromString(
         `<span>${columnStatus} <span style="color: #909090; font-weight: 600;">(${statusCount || 0}/${totalTasks} Tasks, ${statusPoints}/${totalPoints} Points)</span><span>`,
@@ -551,10 +553,12 @@ async function enhanceSprintBoard() {
   function renderProgressBar(issueData) {
     const parent = document.querySelector('.ghx-sprint-meta');
 
-    const donePoints = issueData
-      .filter((i) => i.isDone)
-      .reduce((sum, i) => sum + (i.storyPoints || 0), 0);
-    const totalPoints = issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+    const donePoints = +Number(
+      issueData.filter((i) => i.isDone).reduce((sum, i) => sum + (i.storyPoints || 0), 0),
+    ).toFixed(2);
+    const totalPoints = +Number(
+      issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0),
+    ).toFixed(2);
 
     let percentage = totalPoints > 0 ? Math.round((100 * donePoints) / totalPoints) : 0;
     if (percentage <= 6) {
