@@ -1,11 +1,16 @@
 async function run() {
   setDefaults();
 
-  await enhanceSprintBoard();
-  await enhanceBacklog();
+  if (isBacklog()) {
+    await enhanceBacklog();
+  }
 
-  // attachCustomPopupHtml();
-  // attachPopupButton();
+  if (isSprintBoard()) {
+    await enhanceSprintBoard();
+  }
+
+  attachCustomPopupHtml();
+  attachPopupButton();
 }
 
 async function loop(fn) {

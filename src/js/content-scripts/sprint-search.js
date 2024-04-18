@@ -117,10 +117,21 @@ function filterSprintIssuesV2(params = {}) {
 
     if (assignee) {
       const assigneeElement = card.querySelector('.ghx-avatar-img');
+
+      let assigneeMatch = false;
+
       if (assigneeElement) {
         const cardAssignee = assigneeElement.alt.split('Assignee: ').pop();
-        checks.push(checkAssigneeIsAllowed(assignee, cardAssignee));
+        assigneeMatch = assigneeMatch || checkAssigneeIsAllowed(assignee, cardAssignee);
       }
+
+      const potentialReviewerNames = [...card.querySelectorAll('.ghx-extra-field')].map(
+        (e) => e.innerText,
+      );
+      if (potentialReviewerNames.some((s) => s === assignee)) {
+        assigneeMatch = assigneeMatch || true;
+      }
+      checks.push(assigneeMatch);
     }
 
     return checks.every((p) => p);

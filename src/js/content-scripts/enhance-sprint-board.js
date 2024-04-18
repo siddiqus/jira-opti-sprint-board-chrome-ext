@@ -342,12 +342,15 @@ async function enhanceSprintBoard() {
     const freePeople = getFreeReviewersSet(issueData);
 
     const dataArray = Object.keys(assignedTasksData).reduce((arr, assigneeName) => {
-      const isFree =
-        freePeople.has(assigneeName) && (assignedTasksData[assigneeName] || []).length < 3;
+      const assignedTasks = assignedTasksData[assigneeName] || [];
+      const totalPoints = assignedTasks.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+      const isFree = freePeople.has(assigneeName) && assignedTasks.length < 3;
+
       const person = {
         name: assigneeName,
-        count: assignedTasksData[assigneeName].length,
+        count: assignedTasks.length,
         isFree,
+        points: totalPoints,
       };
       return [...arr, person];
     }, []);
@@ -360,7 +363,7 @@ async function enhanceSprintBoard() {
       const elem = Utils.getHtmlFromString(`<span 
         class="aui-label ghx-jira-plugin-assignee-selector"
         style="cursor: pointer; padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
-          ${assignee.name}: ${assignee.count} ${assignee.isFree ? '(free)' : ''}
+          ${assignee.name}: ${assignee.count} (${+Number(assignee.points).toFixed(2)} pts) ${assignee.isFree ? '(free)' : ''}
         </span>`);
 
       function toggleAssigneeFilter(e, assigneeName) {
@@ -500,7 +503,9 @@ async function enhanceSprintBoard() {
 
   function showStatusColumnCounts(issueData) {
     const totalTasks = issueData.length;
-    const totalPoints = issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+    const totalPoints = +Number(
+      issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0),
+    ).toFixed(2);
 
     const { statusCountMap, pointsMap } = issueData.reduce(
       (map, issue) => {
@@ -536,7 +541,7 @@ async function enhanceSprintBoard() {
 
       columnStatus = sanitizeProductReviewHeading(columnStatus);
       const statusCount = statusCountMap[columnStatus] || 0;
-      const statusPoints = pointsMap[columnStatus] || 0;
+      const statusPoints = +Number(pointsMap[columnStatus] || 0).toFixed(2);
 
       const html = Utils.getHtmlFromString(
         `<span>${columnStatus} <span style="color: #909090; font-weight: 600;">(${statusCount || 0}/${totalTasks} Tasks, ${statusPoints}/${totalPoints} Points)</span><span>`,
@@ -548,10 +553,12 @@ async function enhanceSprintBoard() {
   function renderProgressBar(issueData) {
     const parent = document.querySelector('.ghx-sprint-meta');
 
-    const donePoints = issueData
-      .filter((i) => i.isDone)
-      .reduce((sum, i) => sum + (i.storyPoints || 0), 0);
-    const totalPoints = issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+    const donePoints = +Number(
+      issueData.filter((i) => i.isDone).reduce((sum, i) => sum + (i.storyPoints || 0), 0),
+    ).toFixed(2);
+    const totalPoints = +Number(
+      issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0),
+    ).toFixed(2);
 
     let percentage = totalPoints > 0 ? Math.round((100 * donePoints) / totalPoints) : 0;
     if (percentage <= 6) {
@@ -693,16 +700,18 @@ async function enhanceSprintBoard() {
 
     // Iterate through issues and assign potential reviewers
     const updatedIssueArray = inCodeReviewWithoutReviewer.map((issue, index) => {
-      const wrappedIndex = index % availableReviewers.length;
-      const nextIndex = (wrappedIndex + 1) % availableReviewers.length;
+      const potentialReviewers = availableReviewers.filter((a) => a !== issue.assignee);
+
+      const wrappedIndex = index % potentialReviewers.length;
+      const nextIndex = (wrappedIndex + 1) % potentialReviewers.length;
 
       const suggestedReviewers = [];
-      if (availableReviewers[wrappedIndex]) {
-        suggestedReviewers.push(availableReviewers[wrappedIndex].name.split(' ').shift());
+      if (potentialReviewers[wrappedIndex]) {
+        suggestedReviewers.push(potentialReviewers[wrappedIndex].name.split(' ').shift());
       }
 
-      if (availableReviewers[nextIndex]) {
-        suggestedReviewers.push(availableReviewers[nextIndex].name.split(' ').shift());
+      if (potentialReviewers[nextIndex]) {
+        suggestedReviewers.push(potentialReviewers[nextIndex].name.split(' ').shift());
       }
 
       if (suggestedReviewers.length) {
@@ -785,5 +794,3 @@ async function enhanceSprintBoard() {
 
   await run();
 }
-
-enhanceSprintBoard();
