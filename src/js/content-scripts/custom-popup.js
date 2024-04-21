@@ -13,6 +13,11 @@ function openPopup() {
 
 // eslint-disable-next-line
 function closePopup() {
+  const contentDiv = document.getElementById(CUSTOM_POUP_CONTENT_DIV_ID);
+  if (contentDiv) {
+    contentDiv.innerHTML = null
+  }
+
   const popup = document.getElementById(CUSTOM_POPUP_CONTAINER_ID);
 
   if (popup) {

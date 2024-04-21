@@ -7,10 +7,9 @@ async function run() {
 
   if (isSprintBoard()) {
     await enhanceSprintBoard();
+    attachCustomPopupHtml();
+    attachPopupButton();
   }
-
-  attachCustomPopupHtml();
-  attachPopupButton();
 }
 
 async function loop(fn) {
