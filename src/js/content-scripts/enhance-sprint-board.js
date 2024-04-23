@@ -363,7 +363,7 @@ async function enhanceSprintBoard() {
       const elem = Utils.getHtmlFromString(`<span 
         class="aui-label ghx-jira-plugin-assignee-selector"
         style="cursor: pointer; padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
-          ${assignee.name}: ${assignee.count} (${+Number(assignee.points).toFixed(2)} pts) ${assignee.isFree ? '(free)' : ''}
+          ${assignee.name}: ${+Number(assignee.points).toFixed(2)} pts ${assignee.isFree ? '(free)' : ''}
         </span>`);
 
       function toggleAssigneeFilter(e, assigneeName) {
@@ -481,8 +481,13 @@ async function enhanceSprintBoard() {
     return dataArray;
   }
 
-  function populateReviewerData(issueData) {
+  async function populateReviewerData(issueData) {
     const dataArray = getReviewerData(issueData);
+
+    if (!(await localStorageService.get(options.flags.SHOW_REVIEW_COUNTS_ENABLED))) {
+      removeReviewerCountsData();
+      return;
+    }
 
     const getHtml = (
       reviewer,
@@ -603,6 +608,13 @@ async function enhanceSprintBoard() {
 
   function removeReviewerPairData() {
     const elem = document.getElementById('ghx-header-reviewer-pairs-counts');
+    if (elem) {
+      elem.remove();
+    }
+  }
+
+  function removeReviewerCountsData() {
+    const elem = document.getElementById('ghx-header-reviewer-task-counts');
     if (elem) {
       elem.remove();
     }
@@ -753,7 +765,7 @@ async function enhanceSprintBoard() {
     populateEpicCompletionData(getEpicCompletionData(issueData));
     populateAssigneeData(issueData);
 
-    populateReviewerData(issueData);
+    await populateReviewerData(issueData);
 
     await populateReviewerPairData(issueData);
   }
