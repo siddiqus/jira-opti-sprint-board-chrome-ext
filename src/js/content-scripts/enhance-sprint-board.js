@@ -363,7 +363,7 @@ async function enhanceSprintBoard() {
       const elem = Utils.getHtmlFromString(`<span 
         class="aui-label ghx-jira-plugin-assignee-selector"
         style="cursor: pointer; padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
-          ${assignee.name}: ${assignee.count} (${+Number(assignee.points).toFixed(2)} pts) ${assignee.isFree ? '(free)' : ''}
+          ${assignee.name}: ${+Number(assignee.points).toFixed(2)} pts ${assignee.isFree ? '(free)' : ''}
         </span>`);
 
       function toggleAssigneeFilter(e, assigneeName) {
@@ -481,8 +481,13 @@ async function enhanceSprintBoard() {
     return dataArray;
   }
 
-  function populateReviewerData(issueData) {
+  async function populateReviewerData(issueData) {
     const dataArray = getReviewerData(issueData);
+
+    if (!(await localStorageService.get(options.flags.SHOW_REVIEW_COUNTS_ENABLED))) {
+      removeReviewerCountsData();
+      return;
+    }
 
     const getHtml = (
       reviewer,
@@ -570,7 +575,7 @@ async function enhanceSprintBoard() {
     const progressBarBorderRadius = percentage < 94 ? '2em 2px 2px 2em' : '2em';
     const progressBarHtmlString = `<div id="${progressBarId}" style="float:left; border-radius: 2em; border: 1px solid gray; margin-left: 20px; margin-right: 20px; width: 200px; height: 26px; position: relative; display: inline-block;">
           <div id="ghx-progressBar" style="height: 26px; background: #3ea9ff;border-radius: ${progressBarBorderRadius};width: ${percentage}%;"></div>
-          <span style="position: absolute; font-size: 12px; color: black; left: 25%; top: 18%; font-weight: 500; width: 100px; text-align: center;">
+          <span style="position: absolute; font-size: 12px; color: black; left: 25%; top: 18%; font-weight: 500; width: 120px; text-align: center;">
               ${donePoints} / ${totalPoints} points
           </span>
       </div>`;
@@ -603,6 +608,13 @@ async function enhanceSprintBoard() {
 
   function removeReviewerPairData() {
     const elem = document.getElementById('ghx-header-reviewer-pairs-counts');
+    if (elem) {
+      elem.remove();
+    }
+  }
+
+  function removeReviewerCountsData() {
+    const elem = document.getElementById('ghx-header-reviewer-task-counts');
     if (elem) {
       elem.remove();
     }
@@ -753,7 +765,7 @@ async function enhanceSprintBoard() {
     populateEpicCompletionData(getEpicCompletionData(issueData));
     populateAssigneeData(issueData);
 
-    populateReviewerData(issueData);
+    await populateReviewerData(issueData);
 
     await populateReviewerPairData(issueData);
   }
