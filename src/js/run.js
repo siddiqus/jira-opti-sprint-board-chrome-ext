@@ -8,7 +8,7 @@ async function run() {
   if (isSprintBoard()) {
     await enhanceSprintBoard();
     attachCustomPopupHtml();
-    attachPopupButton();
+    // attachPopupButton();
   }
 }
 

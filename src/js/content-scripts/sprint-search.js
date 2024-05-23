@@ -128,7 +128,7 @@ function filterSprintIssuesV2(params = {}) {
       const potentialReviewerNames = [...card.querySelectorAll('.ghx-extra-field')].map(
         (e) => e.innerText,
       );
-      if (potentialReviewerNames.some((s) => s === assignee)) {
+      if (potentialReviewerNames.some((s) => s.includes(assignee))) {
         assigneeMatch = assigneeMatch || true;
       }
       checks.push(assigneeMatch);
