@@ -555,6 +555,49 @@ async function enhanceSprintBoard() {
     });
   }
 
+  function getStatusPercentageBreakdown(issueData) {
+    let todoCount = 0;
+    let inProgressCount = 0;
+    let productReviewCount = 0;
+    let doneCount = 0;
+
+    for (const issue of issueData) {
+      if (issue.isDone) {
+        doneCount++;
+      } else if (issue.status.toLowerCase() === 'to do') {
+        todoCount++;
+      } else if (
+        ['in progress', 'code review', 'peer review', 'pr review'].includes(
+          issue.status.toLowerCase(),
+        )
+      ) {
+        inProgressCount++;
+      } else if (issue.status.toLowerCase() === 'product review') {
+        productReviewCount++;
+      }
+    }
+
+    const total = issueData.length;
+    const todo = Math.round(100 * Utils.toFixed(todoCount / total));
+    const inProgress = Math.round(100 * Utils.toFixed(inProgressCount / total));
+    const inProductReview = Math.round(100 * Utils.toFixed(productReviewCount / total));
+    const isDone = Math.round(100 * Utils.toFixed(doneCount / total));
+
+    // adjust for rounding error
+    const sumTotal = todo + inProgress + inProductReview + isDone;
+    const diff = 100 - sumTotal;
+    if (diff > 0) {
+      inProgress += diff;
+    }
+
+    return {
+      todo,
+      inProgress,
+      inProductReview,
+      isDone,
+    };
+  }
+
   function renderProgressBar(issueData) {
     const parent = document.querySelector('.ghx-sprint-meta');
 
@@ -571,13 +614,42 @@ async function enhanceSprintBoard() {
     }
 
     const progressBarId = 'ghx-sprint-progress-bar-container';
+    const progressBarHoverComponentId = 'ghx-progressBar-hoverComponent';
 
     const progressBarBorderRadius = percentage < 94 ? '2em 2px 2px 2em' : '2em';
-    const progressBarHtmlString = `<div id="${progressBarId}" style="float:left; border-radius: 2em; border: 1px solid gray; margin-left: 20px; margin-right: 20px; width: 200px; height: 26px; position: relative; display: inline-block;">
-          <div id="ghx-progressBar" style="height: 26px; background: #3ea9ff;border-radius: ${progressBarBorderRadius};width: ${percentage}%;"></div>
-          <span style="position: absolute; font-size: 12px; color: black; left: 25%; top: 18%; font-weight: 500; width: 120px; text-align: center;">
-              ${donePoints} / ${totalPoints} points
-          </span>
+
+    const barWidth = 200; // px
+
+    function renderStatusWiseProgress() {
+      const breakdown = getStatusPercentageBreakdown(issueData);
+
+      const todo = Utils.toFixed((200 * breakdown.todo) / 100);
+      const inProgress = Utils.toFixed((200 * breakdown.inProgress) / 100);
+      const productReview = Utils.toFixed((200 * breakdown.inProductReview) / 100);
+      const done = Utils.toFixed((200 * breakdown.isDone) / 100);
+
+      const inProgressWidth = todo + inProgress;
+      const inProductReviewWidth = inProgressWidth + productReview;
+      const doneWidth = inProductReviewWidth + done;
+
+      return `<div class="ghx-progressBar-status-component" style="height: 26px; background: #81e489; border-radius: 0 2em 2em 0; width: ${todo}px; margin-bottom: 5px;"> TODO </div>
+        <div class="ghx-progressBar-status-component" style="height: 26px; background: #81e489; border-radius: 0 2em 2em 0;width: ${inProgressWidth}px; margin-bottom: 5px;"> IN PROGRESS </div>
+        <div class="ghx-progressBar-status-component" style="height: 26px; background: #81e489; border-radius: 0 2em 2em 0; width: ${inProductReviewWidth}px; margin-bottom: 5px;">PRODUCT REVIEW</div>
+        <div class="ghx-progressBar-status-component" style="height: 26px; background: #81e489; border-radius: 0 2em 2em 0; width: ${doneWidth}px; margin-bottom: 5px;">DONE</div>`;
+    }
+
+    const progressBarHtmlString = `<div id="${progressBarId}" style="background: white; float:left; margin-left: 20px; margin-right: 20px; width: ${barWidth + 10}px; height: 26px; position: relative; display: inline-block; padding: 0px 5px;">
+          <div id="ghx-progressBar-wrapper" style="border-radius: 2em; border: 1px solid gray;">
+            <div id="ghx-progressBar" style="height: 26px; background: #3ea9ff;border-radius: ${progressBarBorderRadius};width: ${percentage}%;"></div>
+            <span style="position: absolute; font-size: 12px; color: black; left: 25%; top: 18%; font-weight: 500; width: 120px; text-align: center;">
+                ${donePoints} / ${totalPoints} points
+            </span>
+          </div>
+          <div id="${progressBarHoverComponentId}" style="position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: 0">
+            <div id="ghx-progressBar-wrapper">
+              ${renderStatusWiseProgress()}
+            </div>
+          </div>
       </div>`;
 
     const progressBarHtml = Utils.getHtmlFromString(progressBarHtmlString);
@@ -589,6 +661,20 @@ async function enhanceSprintBoard() {
     if (parent) {
       parent.insertBefore(progressBarHtml, parent.firstChild);
     }
+
+    // // hover behavior
+    const anchor = document.getElementById(progressBarId);
+    const floating = document.getElementById(progressBarHoverComponentId);
+
+    // visible
+    anchor.addEventListener('mouseenter', () => {
+      floating.style.opacity = 1;
+    });
+
+    // hidden
+    anchor.addEventListener('mouseleave', () => {
+      floating.style.opacity = 0;
+    });
   }
 
   function getReviewerPairs(issuesData) {
@@ -681,7 +767,7 @@ async function enhanceSprintBoard() {
 
     const html = `<div
   id="ghx-board-search-container"
-  style="position: absolute;top: 0;right: 20px;width: 196px;border: 1px solid lightgray;border-radius: 3px;padding: 8px 10px;"
+  style="position: absolute;top: 0;right: 20px;width: 196px;border: 1px solid lightgray;border-radius: 3px;padding: 8px 10px;z-index: 3000;background: white;"
 >
   <input id="ghx-board-search-input" placeholder="Search here" spellcheck="false" style="border: none; border-radius: 3px; color: #666; width: 170px;"></input>
   <span id="ghx-board-search-icon" class="js-search-trigger ghx-iconfont aui-icon aui-icon-small aui-iconfont-search-small" style="position: absolute; right: 10px; top: 28%; color: #666; background: white;">

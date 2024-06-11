@@ -52,6 +52,10 @@ const Utils = {
   insertAfter: (referenceNode, newNode) => {
     referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
   },
+
+  toFixed: (number, decimals = 2) => {
+    return +Number(number).toFixed(decimals);
+  },
 };
 
 function clearSprintSearchBar() {
@@ -79,8 +83,11 @@ function isSprintBoard() {
 }
 
 function isBacklog() {
-  const html = document.getElementById('ghx-plan').innerHTML;
-  return html !== '';
+  const html = document.getElementById('ghx-plan');
+  if (!html) {
+    return;
+  }
+  return html.innerHTML !== '';
 }
 
 function isReports() {
