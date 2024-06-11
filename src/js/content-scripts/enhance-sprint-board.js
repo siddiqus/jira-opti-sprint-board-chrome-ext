@@ -555,33 +555,47 @@ async function enhanceSprintBoard() {
     });
   }
 
-  function getStatusPercentageBreakdown(issueData) {
-    let todoCount = 0;
-    let inProgressCount = 0;
-    let productReviewCount = 0;
-    let doneCount = 0;
+  function getStoryPointsBreakdown(issueData) {
+    const total = issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0);
+
+    let todoPoints = 0;
+    let inProgressPoints = 0;
+    let productReviewPoints = 0;
+    let donePoints = 0;
 
     for (const issue of issueData) {
+      const storyPoints = issue.storyPoints || 0;
       if (issue.isDone) {
-        doneCount++;
+        donePoints += storyPoints;
       } else if (issue.status.toLowerCase() === 'to do') {
-        todoCount++;
+        todoPoints += storyPoints;
       } else if (
         ['in progress', 'code review', 'peer review', 'pr review'].includes(
           issue.status.toLowerCase(),
         )
       ) {
-        inProgressCount++;
+        inProgressPoints += storyPoints;
       } else if (issue.status.toLowerCase() === 'product review') {
-        productReviewCount++;
+        productReviewPoints += storyPoints;
       }
     }
 
-    const total = issueData.length;
-    const todo = Math.round(100 * Utils.toFixed(todoCount / total));
-    const inProgress = Math.round(100 * Utils.toFixed(inProgressCount / total));
-    const inProductReview = Math.round(100 * Utils.toFixed(productReviewCount / total));
-    const isDone = Math.round(100 * Utils.toFixed(doneCount / total));
+    return {
+      total,
+      todoPoints,
+      inProgressPoints,
+      productReviewPoints,
+      donePoints,
+    };
+  }
+
+  function getStatusPercentageBreakdown(pointBreakdown) {
+    const { donePoints, inProgressPoints, productReviewPoints, todoPoints, total } = pointBreakdown;
+
+    const todo = Math.round(100 * Utils.toFixed(todoPoints / total));
+    const inProgress = Math.round(100 * Utils.toFixed(inProgressPoints / total));
+    const inProductReview = Math.round(100 * Utils.toFixed(productReviewPoints / total));
+    const isDone = Math.round(100 * Utils.toFixed(donePoints / total));
 
     // adjust for rounding error
     const sumTotal = todo + inProgress + inProductReview + isDone;
@@ -621,36 +635,33 @@ async function enhanceSprintBoard() {
     const barWidth = 200; // px
 
     function renderStatusWiseProgress() {
-      const breakdown = getStatusPercentageBreakdown(issueData);
+      const pointBreakdown = getStoryPointsBreakdown(issueData);
+      const percentageBreakdown = getStatusPercentageBreakdown(pointBreakdown);
 
-      const todo = Utils.toFixed((200 * breakdown.todo) / 100);
-      const inProgress = Utils.toFixed((200 * breakdown.inProgress) / 100);
-      const productReview = Utils.toFixed((200 * breakdown.inProductReview) / 100);
-      const done = Utils.toFixed((200 * breakdown.isDone) / 100);
+      const todo = Utils.toFixed((200 * percentageBreakdown.todo) / 100);
+      const inProgress = Utils.toFixed((200 * percentageBreakdown.inProgress) / 100);
+      const productReview = Utils.toFixed((200 * percentageBreakdown.inProductReview) / 100);
+      const done = Utils.toFixed((200 * percentageBreakdown.isDone) / 100);
 
-      const inProgressWidth = todo + inProgress;
-      const inProductReviewWidth = inProgressWidth + productReview;
-      const doneWidth = inProductReviewWidth + done;
-
-      return `<div class="ghx-progressBar-status-component" style="height: 26px; background: #81e489; border-radius: 0 2em 2em 0; width: ${todo}px; margin-bottom: 5px;"> TODO </div>
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: #81e489; border-radius: 0 2em 2em 0;width: ${inProgressWidth}px; margin-bottom: 5px;"> IN PROGRESS </div>
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: #81e489; border-radius: 0 2em 2em 0; width: ${inProductReviewWidth}px; margin-bottom: 5px;">PRODUCT REVIEW</div>
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: #81e489; border-radius: 0 2em 2em 0; width: ${doneWidth}px; margin-bottom: 5px;">DONE</div>`;
+      return `<div id="ghx-progressBar-wrapper" style="width: ${barWidth}px; border: 1px solid gray; border-radius: 2em; display: grid; grid-template-columns: ${todo}px ${inProgress}px ${productReview}px ${done}px;">
+        <div title="TODO (${pointBreakdown.todoPoints}/${pointBreakdown.total})" class="ghx-progressBar-status-component" style="height: 26px; background: #42526e; border-radius: 2em 0 0 2em; width: ${todo}px;"> </div>
+        <div title="IN PROGRESS (${pointBreakdown.inProgressPoints}/${pointBreakdown.total})" class="ghx-progressBar-status-component" style="height: 26px; background: #3ea9ff; border-radius: 0; width: ${inProgress}px;"></div>
+        <div title="PRODUCT REVIEW (${pointBreakdown.productReviewPoints}/${pointBreakdown.total})" class="ghx-progressBar-status-component" style="height: 26px; background: #0052cc; border-radius: 0; width: ${productReview}px;"></div>
+        <div title="DONE (${pointBreakdown.donePoints}/${pointBreakdown.total})" class="ghx-progressBar-status-component" style="height: 26px; background: #14d21c; border-radius: 0em 2em 2em 0em; width: ${done}px;"></div>
+      </div>`;
     }
 
-    const progressBarHtmlString = `<div id="${progressBarId}" style="background: white; float:left; margin-left: 20px; margin-right: 20px; width: ${barWidth + 10}px; height: 26px; position: relative; display: inline-block; padding: 0px 5px;">
-          <div id="ghx-progressBar-wrapper" style="border-radius: 2em; border: 1px solid gray;">
-            <div id="ghx-progressBar" style="height: 26px; background: #3ea9ff;border-radius: ${progressBarBorderRadius};width: ${percentage}%;"></div>
-            <span style="position: absolute; font-size: 12px; color: black; left: 25%; top: 18%; font-weight: 500; width: 120px; text-align: center;">
-                ${donePoints} / ${totalPoints} points
-            </span>
-          </div>
-          <div id="${progressBarHoverComponentId}" style="position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: 0">
-            <div id="ghx-progressBar-wrapper">
-              ${renderStatusWiseProgress()}
-            </div>
-          </div>
-      </div>`;
+    const progressBarHtmlString = `<div id="${progressBarId}" style="background: white; float:left; margin-left: 20px; margin-right: 20px; width: ${barWidth}px; height: 26px; position: relative; display: inline-block; padding: 0px 5px;">
+      <div id="ghx-progressBar-wrapper" style="border-radius: 2em; border: 1px solid gray;">
+        <div id="ghx-progressBar" style="height: 26px; background: #3ea9ff;border-radius: ${progressBarBorderRadius};width: ${percentage}%;"></div>
+        <span style="position: absolute; font-size: 12px; color: black; left: 25%; top: 18%; font-weight: 500; width: 120px; text-align: center;">
+            ${donePoints} / ${totalPoints} points
+        </span>
+      </div>
+      <div id="${progressBarHoverComponentId}" style="position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: 0;">  
+        ${renderStatusWiseProgress()}
+      </div>
+    </div>`;
 
     const progressBarHtml = Utils.getHtmlFromString(progressBarHtmlString);
 
@@ -662,7 +673,7 @@ async function enhanceSprintBoard() {
       parent.insertBefore(progressBarHtml, parent.firstChild);
     }
 
-    // // hover behavior
+    // hover behavior
     const anchor = document.getElementById(progressBarId);
     const floating = document.getElementById(progressBarHoverComponentId);
 
