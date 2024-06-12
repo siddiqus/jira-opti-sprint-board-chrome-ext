@@ -620,9 +620,9 @@ async function enhanceSprintBoard() {
     const { donePoints, inProgressPoints, productReviewPoints, todoPoints } = pointBreakdown;
 
     const todo = Math.round(100 * Utils.toFixed(todoPoints / totalPoints));
-    const inProgress = Math.round(100 * Utils.toFixed(inProgressPoints / totalPoints));
     const inProductReview = Math.round(100 * Utils.toFixed(productReviewPoints / totalPoints));
     const isDone = Math.round(100 * Utils.toFixed(donePoints / totalPoints));
+    let inProgress = Math.round(100 * Utils.toFixed(inProgressPoints / totalPoints));
 
     // adjust for rounding error
     const sumTotal = todo + inProgress + inProductReview + isDone;
