@@ -688,11 +688,13 @@ async function enhanceSprintBoard() {
     );
     const doneWidth = Utils.toFixed((barWidth * percentageBreakdown.isDone) / 100);
 
-    const progressElem = `<div id="ghx-progressBar-wrapper" style="width: ${barWidth}px; border: 1px solid gray; border-radius: 2em; display: grid; grid-template-columns: ${todoWidth}px ${inProgressWidth}px ${productReviewWidth}px ${doneWidth}px;">
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: #42526e; border-radius: 2em 0 0 2em; width: ${todoWidth}px;"> </div>
+    const progressBarBorderRadius = 5;
+    const progressBarInnerBorderRadius = progressBarBorderRadius - 1;
+    const progressElem = `<div id="ghx-progressBar-wrapper" style="width: ${barWidth}px; border: 1px solid gray; border-radius: ${progressBarBorderRadius}px; display: grid; grid-template-columns: ${todoWidth}px ${inProgressWidth}px ${productReviewWidth}px ${doneWidth}px;">
+        <div class="ghx-progressBar-status-component" style="height: 26px; background: #42526e; border-radius: ${progressBarInnerBorderRadius}px 0 0 ${progressBarInnerBorderRadius}px; width: ${todoWidth}px;"> </div>
         <div class="ghx-progressBar-status-component" style="height: 26px; background: #3ea9ff; border-radius: 0; width: ${inProgressWidth}px;"></div>
         <div class="ghx-progressBar-status-component" style="height: 26px; background: #0052cc; border-radius: 0; width: ${productReviewWidth}px;"></div>
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: #14d21c; border-radius: 0em 2em 2em 0em; width: ${doneWidth}px;"></div>
+        <div class="ghx-progressBar-status-component" style="height: 26px; background: #14d21c; border-radius: 0em ${progressBarInnerBorderRadius}px ${progressBarInnerBorderRadius}px 0em; width: ${doneWidth}px;"></div>
     </div>`;
 
     const trStyle = 'border-bottom: 1px solid lightgray; height: 30px;';
