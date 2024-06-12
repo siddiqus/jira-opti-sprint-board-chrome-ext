@@ -9,7 +9,8 @@ const disableReviewCountsBtn = document.getElementById('disableReviewCounts');
 
 // Set initial state based on local storage
 async function loadHoursDisplayFlagDefault() {
-  const isHoursEnabled = await localStorageService.get(options.flags.HOURS_IN_STATUS_ENABLED);
+  const isHoursEnabled =
+    (await localStorageService.get(options.flags.HOURS_IN_STATUS_ENABLED)) || true; // show by default
 
   if (isHoursEnabled) {
     enableHoursDisplayBtn.checked = true;
@@ -19,7 +20,8 @@ async function loadHoursDisplayFlagDefault() {
 }
 
 async function loadReviewPairsFlagDefault() {
-  const isEnabled = await localStorageService.get(options.flags.SHOW_REVIEW_PAIRS_ENABLED);
+  const isEnabled =
+    (await localStorageService.get(options.flags.SHOW_REVIEW_PAIRS_ENABLED)) || false; // hide by default
 
   if (isEnabled) {
     enableReviewPairsBtn.checked = true;
@@ -29,7 +31,8 @@ async function loadReviewPairsFlagDefault() {
 }
 
 async function loadReviewCountsFlagDefault() {
-  const isEnabled = await localStorageService.get(options.flags.SHOW_REVIEW_COUNTS_ENABLED);
+  const isEnabled =
+    (await localStorageService.get(options.flags.SHOW_REVIEW_COUNTS_ENABLED)) || true; // show by default
 
   if (isEnabled) {
     enableReviewCountsBtn.checked = true;
