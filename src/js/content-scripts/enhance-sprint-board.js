@@ -699,7 +699,7 @@ async function enhanceSprintBoard() {
     const labelTable = `<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
       <tr style="${trStyle}; font-weight: 500;">
         <td style="text-align: left;"></td>
-        <td style="text-align: left;">Counts</td>
+        <td style="text-align: left;">Tickets</td>
         <td style="text-align: left;">Points</td>
         <td style="text-align: right;"></td>
       </tr>
