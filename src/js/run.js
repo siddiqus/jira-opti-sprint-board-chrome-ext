@@ -13,11 +13,11 @@ async function run() {
 }
 
 async function loop(fn) {
-  await fn();
-
   setInterval(async () => {
     await fn();
-  }, 2000);
+  }, 4000);
+
+  setTimeout(fn, 2000);
 }
 
 loop(run);

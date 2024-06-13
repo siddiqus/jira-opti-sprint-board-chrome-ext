@@ -1,4 +1,6 @@
 // eslint-disable-next-line
+var IS_PROGRESS_BAR_DROPDOWN_SHOWN = false;
+
 async function enhanceSprintBoard() {
   const baseUrl = 'https://jira.sso.episerver.net';
   const urlParams = new URLSearchParams(window.location.search);
@@ -507,7 +509,6 @@ async function enhanceSprintBoard() {
   }
 
   function showStatusColumnCounts(issueData) {
-    const totalTasks = issueData.length;
     const totalPoints = +Number(
       issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0),
     ).toFixed(2);
@@ -545,19 +546,28 @@ async function enhanceSprintBoard() {
       let columnStatus = headerTitleElem.innerText.trim().toUpperCase().split(' (')[0];
 
       columnStatus = sanitizeProductReviewHeading(columnStatus);
+
+      const statusColor = colors.byStatus[columnStatus];
+
+      headerElement.style.background = statusColor;
+      headerElement.style.textAlign = 'center';
+
       const statusCount = statusCountMap[columnStatus] || 0;
       const statusPoints = +Number(pointsMap[columnStatus] || 0).toFixed(2);
 
+      const pointPercentage = Utils.toFixed((100 * statusPoints) / totalPoints);
       const html = Utils.getHtmlFromString(
-        `<span>${columnStatus} <span style="color: #909090; font-weight: 600;">(${statusCount || 0}/${totalTasks} Tasks, ${statusPoints}/${totalPoints} Points)</span><span>`,
+        `<span>${columnStatus} (${statusCount || 0} Tasks, ${statusPoints} Points, ${pointPercentage}%)</span>`,
       );
       headerTitleElem.innerHTML = html.innerHTML;
+      headerTitleElem.style.color = 'white';
     });
   }
 
   function getStoryPointsBreakdown(issueData) {
     let todoPoints = 0;
     let inProgressPoints = 0;
+    let inCodeReviewPoints = 0;
     let productReviewPoints = 0;
     let donePoints = 0;
 
@@ -567,12 +577,10 @@ async function enhanceSprintBoard() {
         donePoints += storyPoints;
       } else if (issue.status.toLowerCase() === 'to do') {
         todoPoints += storyPoints;
-      } else if (
-        ['in progress', 'code review', 'peer review', 'pr review'].includes(
-          issue.status.toLowerCase(),
-        )
-      ) {
+      } else if (issue.status.toLowerCase() === 'in progress') {
         inProgressPoints += storyPoints;
+      } else if (['code review', 'peer review', 'pr review'].includes(issue.status.toLowerCase())) {
+        inCodeReviewPoints += storyPoints;
       } else if (issue.status.toLowerCase() === 'product review') {
         productReviewPoints += storyPoints;
       }
@@ -581,6 +589,7 @@ async function enhanceSprintBoard() {
     return {
       todoPoints,
       inProgressPoints,
+      inCodeReviewPoints,
       productReviewPoints,
       donePoints,
     };
@@ -589,6 +598,7 @@ async function enhanceSprintBoard() {
   function getTaskCountBreakdown(issueData) {
     let todo = 0;
     let inProgress = 0;
+    let codeReview = 0;
     let productReview = 0;
     let done = 0;
 
@@ -597,12 +607,14 @@ async function enhanceSprintBoard() {
         done++;
       } else if (issue.status.toLowerCase() === 'to do') {
         todo++;
+      } else if (issue.status.toLowerCase() === 'in progress') {
+        inProgress++;
       } else if (
         ['in progress', 'code review', 'peer review', 'pr review'].includes(
           issue.status.toLowerCase(),
         )
       ) {
-        inProgress++;
+        codeReview++;
       } else if (issue.status.toLowerCase() === 'product review') {
         productReview++;
       }
@@ -611,21 +623,24 @@ async function enhanceSprintBoard() {
     return {
       todo,
       inProgress,
+      codeReview,
       productReview,
       done,
     };
   }
 
   function getStatusPercentageBreakdown(pointBreakdown, totalPoints) {
-    const { donePoints, inProgressPoints, productReviewPoints, todoPoints } = pointBreakdown;
+    const { donePoints, inProgressPoints, inCodeReviewPoints, productReviewPoints, todoPoints } =
+      pointBreakdown;
 
     const todo = Math.round(100 * Utils.toFixed(todoPoints / totalPoints));
+    const inCodeReview = Math.round(100 * Utils.toFixed(inCodeReviewPoints / totalPoints));
     const inProductReview = Math.round(100 * Utils.toFixed(productReviewPoints / totalPoints));
     const isDone = Math.round(100 * Utils.toFixed(donePoints / totalPoints));
     let inProgress = Math.round(100 * Utils.toFixed(inProgressPoints / totalPoints));
 
     // adjust for rounding error
-    const sumTotal = todo + inProgress + inProductReview + isDone;
+    const sumTotal = todo + inProgress + inCodeReview + inProductReview + isDone;
     const diff = 100 - sumTotal;
     if (diff > 0) {
       inProgress += diff;
@@ -634,6 +649,7 @@ async function enhanceSprintBoard() {
     return {
       todo,
       inProgress,
+      inCodeReview,
       inProductReview,
       isDone,
     };
@@ -647,11 +663,13 @@ async function enhanceSprintBoard() {
     // visible
     anchor.addEventListener('mouseenter', () => {
       floating.style.opacity = 1;
+      IS_PROGRESS_BAR_DROPDOWN_SHOWN = true;
     });
 
     // hidden
     anchor.addEventListener('mouseleave', () => {
       floating.style.opacity = 0;
+      IS_PROGRESS_BAR_DROPDOWN_SHOWN = false;
     });
   }
 
@@ -672,7 +690,7 @@ async function enhanceSprintBoard() {
       percentage = 6; // this is to make the progress bar start look pretty
     }
 
-    const progressBarId = 'ghx-sprint-progress-bar-container';
+    const progressBarContainerId = 'ghx-sprint-progress-bar-container';
     const progressBarHoverComponentId = 'ghx-progressBar-hoverComponent';
 
     const barWidth = 200; // px
@@ -683,18 +701,19 @@ async function enhanceSprintBoard() {
 
     const todoWidth = Utils.toFixed((barWidth * percentageBreakdown.todo) / 100);
     const inProgressWidth = Utils.toFixed((barWidth * percentageBreakdown.inProgress) / 100);
+    const inCodeReviewWidth = Utils.toFixed((barWidth * percentageBreakdown.inCodeReview) / 100);
     const productReviewWidth = Utils.toFixed(
       (barWidth * percentageBreakdown.inProductReview) / 100,
     );
     const doneWidth = Utils.toFixed((barWidth * percentageBreakdown.isDone) / 100);
 
-    const progressBarBorderRadius = 5;
-    const progressBarInnerBorderRadius = progressBarBorderRadius - 1;
-    const progressElem = `<div id="ghx-progressBar-wrapper" style="width: ${barWidth}px; border: 1px solid gray; border-radius: ${progressBarBorderRadius}px; display: grid; grid-template-columns: ${todoWidth}px ${inProgressWidth}px ${productReviewWidth}px ${doneWidth}px;">
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: #42526e; border-radius: ${progressBarInnerBorderRadius}px 0 0 ${progressBarInnerBorderRadius}px; width: ${todoWidth}px;"> </div>
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: #3ea9ff; border-radius: 0; width: ${inProgressWidth}px;"></div>
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: #0052cc; border-radius: 0; width: ${productReviewWidth}px;"></div>
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: #14d21c; border-radius: 0em ${progressBarInnerBorderRadius}px ${progressBarInnerBorderRadius}px 0em; width: ${doneWidth}px;"></div>
+    const progressBarElementId = 'ghx-progressBar-wrapper';
+    const progressElem = `<div id="${progressBarElementId}" style="width: ${barWidth}px; border: 1px solid gray; border-radius: 3px; display: grid; grid-template-columns: ${todoWidth}px ${inProgressWidth}px ${inCodeReviewWidth}px ${productReviewWidth}px ${doneWidth}px;">
+        <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['TO DO']}; width: ${todoWidth}px;"> </div>
+        <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['IN PROGRESS']}; width: ${inProgressWidth}px;"></div>
+        <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['CODE REVIEW']}; width: ${inCodeReviewWidth}px;"></div>
+        <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['PRODUCT REVIEW']}; width: ${productReviewWidth}px;"></div>
+        <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus.DONE}; width: ${doneWidth}px;"></div>
     </div>`;
 
     const trStyle = 'border-bottom: 1px solid lightgray; height: 30px;';
@@ -724,6 +743,12 @@ async function enhanceSprintBoard() {
         <td style="text-align: right;">${percentageBreakdown.inProgress}%</td>
       </tr>
       <tr style="${trStyle}">
+        <td style="text-align: left;">Code Review</td>
+        <td style="text-align: left;">${taskCountBreakdown.codeReview}</td>
+        <td style="text-align: left;">${pointBreakdown.inCodeReviewPoints}</td>
+        <td style="text-align: right;">${percentageBreakdown.inCodeReview}%</td>
+      </tr>
+      <tr style="${trStyle}">
         <td style="text-align: left;">Product Review</td>
         <td style="text-align: left;">${taskCountBreakdown.productReview}</td>
         <td style="text-align: left;">${pointBreakdown.productReviewPoints}</td>
@@ -737,16 +762,16 @@ async function enhanceSprintBoard() {
       </tr>
     </table>`;
 
-    const progressBarHtmlString = `<div id="${progressBarId}" style="background: white; float:left; margin-left: 20px; margin-right: 20px; width: ${barWidth}px; height: 26px; position: relative; display: inline-block; padding: 0px 5px;">
+    const progressBarHtmlString = `<div id="${progressBarContainerId}" style="background: white; float:left; margin-left: 20px; margin-right: 20px; width: ${barWidth}px; height: 26px; position: relative; display: inline-block; padding: 0px 5px;">
       ${progressElem}
-      <div id="${progressBarHoverComponentId}" style="width: 300px; position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: 0; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
+      <div id="${progressBarHoverComponentId}" style="width: 300px; position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: ${IS_PROGRESS_BAR_DROPDOWN_SHOWN ? 1 : 0}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
         ${labelTable}
       </div>
     </div>`;
 
     const progressBarHtml = Utils.getHtmlFromString(progressBarHtmlString);
 
-    const existingElem = document.getElementById(progressBarId);
+    const existingElem = document.getElementById(progressBarContainerId);
     if (existingElem) {
       existingElem.remove();
     }
@@ -755,7 +780,7 @@ async function enhanceSprintBoard() {
     }
 
     // hover behavior
-    enableHover(progressBarId, progressBarHoverComponentId);
+    enableHover(progressBarElementId, progressBarHoverComponentId);
   }
 
   function getReviewerPairs(issuesData) {

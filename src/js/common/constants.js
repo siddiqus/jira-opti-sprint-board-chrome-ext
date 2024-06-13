@@ -7,6 +7,17 @@ const TIME_ELAPSED_CLASS_NAME = 'ghx-issue-time-elapsed';
 // eslint-disable-next-line
 const HEADER_STATS_FONT_SIZE = '11px';
 
+const colors = {
+  byStatus: {
+    'TO DO': '#42526e',
+    'IN PROGRESS': '#3ea9ff',
+    'CODE REVIEW': '#1e88e5',
+    'PEER REVIEW': '#1e88e5',
+    'PRODUCT REVIEW': '#3f51b5',
+    DONE: '#4caf50',
+  },
+};
+
 const options = {
   flags: {
     HOURS_IN_STATUS_ENABLED: 'JIRA_PLUGIN_HOURS_IN_STATUS_ENABLED',
