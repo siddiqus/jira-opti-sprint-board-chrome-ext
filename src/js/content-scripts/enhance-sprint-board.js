@@ -549,18 +549,16 @@ async function enhanceSprintBoard() {
 
       const statusColor = colors.byStatus[columnStatus];
 
-      headerElement.style.background = statusColor;
-      headerElement.style.textAlign = 'center';
+      headerElement.style.borderBottom = `4px solid ${statusColor}`;
 
       const statusCount = statusCountMap[columnStatus] || 0;
       const statusPoints = +Number(pointsMap[columnStatus] || 0).toFixed(2);
 
       const pointPercentage = Utils.toFixed((100 * statusPoints) / totalPoints);
       const html = Utils.getHtmlFromString(
-        `<span>${columnStatus} (${statusCount || 0} Tasks, ${statusPoints} Points, ${pointPercentage}%)</span>`,
+        `<span><span style="color: ${statusColor}">${columnStatus} (${statusCount || 0} Tasks, ${statusPoints} Points, ${pointPercentage}%)</span></span>`,
       );
       headerTitleElem.innerHTML = html.innerHTML;
-      headerTitleElem.style.color = 'white';
     });
   }
 
