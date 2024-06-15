@@ -78,8 +78,11 @@ function clearSprintEnhancements() {
 }
 
 function isSprintBoard() {
-  const html = document.getElementById('ghx-work').innerHTML;
-  return html !== '';
+  const html = document.getElementById('ghx-work');
+  if (!html) {
+    return false;
+  }
+  return html.innerHTML !== '';
 }
 
 function isBacklog() {
