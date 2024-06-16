@@ -45,14 +45,18 @@ async function enhanceSprintBoard() {
   }
 
   function getMappedIssueData(boardData) {
-    const { epics, statuses } = boardData.entityData;
+    const { epics, statuses, types: typeIdMap } = boardData.entityData;
 
     const { issues } = boardData.issuesData;
 
-    // questions
-    // how long has this in the current column? (in-progress, code review, product review)
+    const mappedIssues = [];
+    for (const issue of issues) {
+      const type = typeIdMap[issue.typeId].typeName;
 
-    const mappedIssues = issues.map((issue) => {
+      if (type === 'Epic') {
+        continue;
+      }
+
       const issueKey = issue.key;
       const assignee = issue.assigneeName || 'Unassigned';
       const epicName = getEpicNameFromId(epics, issue.epicId);
@@ -71,7 +75,7 @@ async function enhanceSprintBoard() {
           : 0,
       );
 
-      return {
+      mappedIssues.push({
         issueKey,
         assignee,
         epicName,
@@ -81,8 +85,9 @@ async function enhanceSprintBoard() {
         status,
         timeElapsedInStatusInHours,
         extraFields: issue.extraFields || [],
-      };
-    });
+        type,
+      });
+    }
 
     return mappedIssues;
   }
