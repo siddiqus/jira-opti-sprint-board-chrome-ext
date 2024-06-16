@@ -855,11 +855,17 @@ async function enhanceSprintBoard() {
         HFRP:
       </span>
   `;
+    if (dataArray.length > 0) {
+      dataArray.forEach((pairData) => {
+        const epicHtml = getHtml(pairData);
+        htmlString += epicHtml;
+      });
+    } else {
+      htmlString += `<span class="aui-label" style="padding: 5px; font-weight: 600; color: gray; font-size: ${HEADER_STATS_FONT_SIZE}">
+        N/A
+      </span>`;
+    }
 
-    dataArray.forEach((pairData) => {
-      const epicHtml = getHtml(pairData);
-      htmlString += epicHtml;
-    });
     htmlString += '</div>';
 
     appendHtmlStringToHeader(`#${elementId}`, htmlString);
