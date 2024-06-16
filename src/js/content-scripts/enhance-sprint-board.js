@@ -698,12 +698,17 @@ async function enhanceSprintBoard() {
     const doneWidth = Utils.toFixed((barWidth * percentageBreakdown.isDone) / 100);
 
     const progressBarElementId = 'ghx-progressBar-wrapper';
-    const progressElem = `<div id="${progressBarElementId}" style="width: ${barWidth}px; border: 1px solid gray; border-radius: 3px; display: grid; grid-template-columns: ${todoWidth}px ${inProgressWidth}px ${inCodeReviewWidth}px ${productReviewWidth}px ${doneWidth}px;">
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['TO DO']}; width: ${todoWidth}px;"> </div>
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['IN PROGRESS']}; width: ${inProgressWidth}px;"></div>
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['CODE REVIEW']}; width: ${inCodeReviewWidth}px;"></div>
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['PRODUCT REVIEW']}; width: ${productReviewWidth}px;"></div>
-        <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus.DONE}; width: ${doneWidth}px;"></div>
+    const progressElem = `<div id="${progressBarElementId}">
+        <div style="width: ${barWidth}px; border: 1px solid gray; border-radius: 3px; display: grid; grid-template-columns: ${todoWidth}px ${inProgressWidth}px ${inCodeReviewWidth}px ${productReviewWidth}px ${doneWidth}px;">
+          <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['TO DO']}; width: ${todoWidth}px;"> </div>
+          <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['IN PROGRESS']}; width: ${inProgressWidth}px;"></div>
+          <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['CODE REVIEW']}; width: ${inCodeReviewWidth}px;"></div>
+          <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['PRODUCT REVIEW']}; width: ${productReviewWidth}px;"></div>
+          <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus.DONE}; width: ${doneWidth}px;"></div>
+        </div>
+        <span style="color: white;position: absolute;top: 20%;font-weight: 500;font-size: 12px;width: ${barWidth}px;text-align: center;">
+          ${totalTasks} Tasks / ${totalPoints} Points
+        </span>
     </div>`;
 
     const trStyle = 'border-bottom: 1px solid lightgray; height: 30px;';
@@ -721,31 +726,31 @@ async function enhanceSprintBoard() {
         <td style="text-align: right;"></td>
       </tr>
       <tr style="${trStyle}">
-        <td style="text-align: left;">To Do</td>
+        <td style="text-align: left; font-weight: 500; color: ${colors.byStatus['TO DO']}">To Do</td>
         <td style="text-align: left;">${taskCountBreakdown.todo}</td>
         <td style="text-align: left;">${pointBreakdown.todoPoints}</td>
         <td style="text-align: right;">${percentageBreakdown.todo}%</td>
       </tr>
       <tr style="${trStyle}">
-        <td style="text-align: left;">In Progress</td>
+        <td style="text-align: left; font-weight: 500; color: ${colors.byStatus['IN PROGRESS']}">In Progress</td>
         <td style="text-align: left;">${taskCountBreakdown.inProgress}</td>
         <td style="text-align: left;">${pointBreakdown.inProgressPoints}</td>
         <td style="text-align: right;">${percentageBreakdown.inProgress}%</td>
       </tr>
       <tr style="${trStyle}">
-        <td style="text-align: left;">Code Review</td>
+        <td style="text-align: left; font-weight: 500; color: ${colors.byStatus['CODE REVIEW']}">Code Review</td>
         <td style="text-align: left;">${taskCountBreakdown.codeReview}</td>
         <td style="text-align: left;">${pointBreakdown.inCodeReviewPoints}</td>
         <td style="text-align: right;">${percentageBreakdown.inCodeReview}%</td>
       </tr>
       <tr style="${trStyle}">
-        <td style="text-align: left;">Product Review</td>
+        <td style="text-align: left; font-weight: 500; color: ${colors.byStatus['PRODUCT REVIEW']}">Product Review</td>
         <td style="text-align: left;">${taskCountBreakdown.productReview}</td>
         <td style="text-align: left;">${pointBreakdown.productReviewPoints}</td>
         <td style="text-align: right;">${percentageBreakdown.inProductReview}%</td>
       </tr>
       <tr style="height: 30px;">
-        <td style="text-align: left;">Done</td>
+        <td style="text-align: left; font-weight: 500; color: ${colors.byStatus['DONE']}">Done</td>
         <td style="text-align: left;">${taskCountBreakdown.done}</td>
         <td style="text-align: left;">${pointBreakdown.donePoints}</td>
         <td style="text-align: right;">${percentageBreakdown.isDone}%</td>
@@ -754,9 +759,6 @@ async function enhanceSprintBoard() {
 
     const progressBarHtmlString = `<div id="${progressBarContainerId}" style="background: white; float:left; margin-left: 10px; margin-right: 10px; width: ${barWidth}px; height: 26px; position: relative; display: inline-block; padding: 0px 5px;">
       ${progressElem}
-      <span style="color: white;position: absolute;top: 20%;font-weight: 500;font-size: 12px;width: ${barWidth}px;text-align: center;">
-        ${totalTasks} Tasks / ${totalPoints} Points
-      </span>
       <div id="${progressBarHoverComponentId}" style="width: 300px; position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: ${IS_PROGRESS_BAR_DROPDOWN_SHOWN ? 1 : 0}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
         ${labelTable}
       </div>
