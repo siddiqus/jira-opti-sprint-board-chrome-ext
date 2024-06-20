@@ -676,23 +676,14 @@ async function enhanceSprintBoard() {
     });
   }
 
-  function renderProgressBar(issueData) {
-    const parent = document.querySelector('.ghx-sprint-meta');
-
-    const totalPoints = Utils.toFixed(
-      issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0),
-      2,
-    );
+  function getProgressBarComponentByStatus({
+    issueData,
+    totalPoints,
+    percentageBreakdown,
+    elementId,
+    barWidth,
+  }) {
     const totalTasks = issueData.length;
-
-    const progressBarContainerId = 'ghx-sprint-progress-bar-container';
-    const progressBarHoverComponentId = 'ghx-progressBar-hoverComponent';
-
-    const barWidth = 200; // px
-
-    const pointBreakdown = getStoryPointsBreakdown(issueData);
-    const percentageBreakdown = getStatusPercentageBreakdown(pointBreakdown, totalPoints);
-    const taskCountBreakdown = getTaskCountBreakdown(issueData);
 
     const todoWidth = Utils.toFixed((barWidth * percentageBreakdown.todo) / 100);
     const inProgressWidth = Utils.toFixed((barWidth * percentageBreakdown.inProgress) / 100);
@@ -702,8 +693,7 @@ async function enhanceSprintBoard() {
     );
     const doneWidth = Utils.toFixed((barWidth * percentageBreakdown.isDone) / 100);
 
-    const progressBarElementId = 'ghx-progressBar-wrapper';
-    const progressElem = `<div id="${progressBarElementId}">
+    const progressElem = `<div id="${elementId}">
         <div style="width: ${barWidth}px; border: 1px solid gray; border-radius: 3px; display: grid; grid-template-columns: ${todoWidth}px ${inProgressWidth}px ${inCodeReviewWidth}px ${productReviewWidth}px ${doneWidth}px;">
           <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['TO DO']}; width: ${todoWidth}px;"> </div>
           <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['IN PROGRESS']}; width: ${inProgressWidth}px;"></div>
@@ -716,6 +706,17 @@ async function enhanceSprintBoard() {
         </span>
     </div>`;
 
+    return progressElem;
+  }
+
+  function getProgressBarHoverElement({
+    issueData,
+    totalPoints,
+    taskCountBreakdown,
+    pointBreakdown,
+    percentageBreakdown,
+    elementId,
+  }) {
     const trStyle = 'border-bottom: 1px solid lightgray; height: 30px;';
     const labelTable = `<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
       <tr style="${trStyle}; font-weight: 500;">
@@ -762,11 +763,46 @@ async function enhanceSprintBoard() {
       </tr>
     </table>`;
 
+    return `<div id="${elementId}" style="width: 300px; position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: ${IS_PROGRESS_BAR_DROPDOWN_SHOWN ? 1 : 0}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
+      ${labelTable}
+    </div>`;
+  }
+
+  function renderProgressBar(issueData) {
+    const parent = document.querySelector('.ghx-sprint-meta');
+
+    const progressBarElementId = 'ghx-progressBar-wrapper';
+    const progressBarContainerId = 'ghx-sprint-progress-bar-container';
+
+    const barWidth = 200;
+
+    const totalPoints = Utils.toFixed(
+      issueData.reduce((sum, i) => sum + (i.storyPoints || 0), 0),
+      2,
+    );
+    const pointBreakdown = getStoryPointsBreakdown(issueData);
+    const percentageBreakdown = getStatusPercentageBreakdown(pointBreakdown, totalPoints);
+    const taskCountBreakdown = getTaskCountBreakdown(issueData);
+
+    const progressElem = getProgressBarComponentByStatus({
+      issueData,
+      elementId: progressBarElementId,
+      barWidth,
+      totalPoints,
+      percentageBreakdown,
+    });
+
+    const progressBarHoverComponentId = 'ghx-progressBar-hoverComponent';
     const progressBarHtmlString = `<div id="${progressBarContainerId}" style="background: white; float:left; margin-left: 10px; margin-right: 10px; width: ${barWidth}px; height: 26px; position: relative; display: inline-block; padding: 0px 5px;">
       ${progressElem}
-      <div id="${progressBarHoverComponentId}" style="width: 300px; position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: ${IS_PROGRESS_BAR_DROPDOWN_SHOWN ? 1 : 0}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
-        ${labelTable}
-      </div>
+      ${getProgressBarHoverElement({
+        elementId: progressBarHoverComponentId,
+        issueData,
+        percentageBreakdown,
+        pointBreakdown,
+        taskCountBreakdown,
+        totalPoints,
+      })}
     </div>`;
 
     const progressBarHtml = Utils.getHtmlFromString(progressBarHtmlString);
