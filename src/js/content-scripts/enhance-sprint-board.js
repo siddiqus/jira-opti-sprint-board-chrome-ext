@@ -709,13 +709,12 @@ async function enhanceSprintBoard() {
     return progressElem;
   }
 
-  function getProgressBarHoverElement({
-    issueData,
+  function getPointWiseStatsTable({
+    taskCount,
     totalPoints,
     taskCountBreakdown,
     pointBreakdown,
     percentageBreakdown,
-    elementId,
   }) {
     const trStyle = 'border-bottom: 1px solid lightgray; height: 30px;';
     const labelTable = `<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
@@ -727,7 +726,7 @@ async function enhanceSprintBoard() {
       </tr>
       <tr style="${trStyle}">
         <td style="text-align: left;">Total</td>
-        <td style="text-align: left;">${issueData.length}</td>
+        <td style="text-align: left;">${taskCount}</td>
         <td style="text-align: left;">${totalPoints}</td>
         <td style="text-align: right;"></td>
       </tr>
@@ -762,7 +761,26 @@ async function enhanceSprintBoard() {
         <td style="text-align: right;">${percentageBreakdown.isDone}%</td>
       </tr>
     </table>`;
+    return labelTable;
+  }
 
+  function getProgressBarHoverElement({
+    issueData,
+    totalPoints,
+    taskCountBreakdown,
+    pointBreakdown,
+    percentageBreakdown,
+    elementId,
+  }) {
+    const taskCount = issueData.length;
+
+    const labelTable = getPointWiseStatsTable({
+      taskCount,
+      totalPoints,
+      taskCountBreakdown,
+      pointBreakdown,
+      percentageBreakdown,
+    });
     return `<div id="${elementId}" style="width: 300px; position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: ${IS_PROGRESS_BAR_DROPDOWN_SHOWN ? 1 : 0}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
       ${labelTable}
     </div>`;
