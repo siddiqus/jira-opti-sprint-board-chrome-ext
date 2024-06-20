@@ -682,6 +682,7 @@ async function enhanceSprintBoard() {
     percentageBreakdown,
     elementId,
     barWidth,
+    height = 26,
   }) {
     const totalTasks = issueData.length;
 
@@ -693,17 +694,17 @@ async function enhanceSprintBoard() {
     );
     const doneWidth = Utils.toFixed((barWidth * percentageBreakdown.isDone) / 100);
 
-    const progressElem = `<div id="${elementId}">
-        <div style="width: ${barWidth}px; border: 1px solid gray; border-radius: 3px; display: grid; grid-template-columns: ${todoWidth}px ${inProgressWidth}px ${inCodeReviewWidth}px ${productReviewWidth}px ${doneWidth}px;">
-          <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['TO DO']}; width: ${todoWidth}px;"> </div>
-          <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['IN PROGRESS']}; width: ${inProgressWidth}px;"></div>
-          <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['CODE REVIEW']}; width: ${inCodeReviewWidth}px;"></div>
-          <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus['PRODUCT REVIEW']}; width: ${productReviewWidth}px;"></div>
-          <div class="ghx-progressBar-status-component" style="height: 26px; background: ${colors.byStatus.DONE}; width: ${doneWidth}px;"></div>
+    const progressElem = `<div id="${elementId}" style="position: relative;">
+        <div style="height: ${height}px; width: ${barWidth}px; border: 1px solid gray; border-radius: 3px; display: grid; grid-template-columns: ${todoWidth}px ${inProgressWidth}px ${inCodeReviewWidth}px ${productReviewWidth}px ${doneWidth}px;">
+          <div class="ghx-progressBar-status-component" style="background: ${colors.byStatus['TO DO']}; width: ${todoWidth}px;"> </div>
+          <div class="ghx-progressBar-status-component" style="background: ${colors.byStatus['IN PROGRESS']}; width: ${inProgressWidth}px;"></div>
+          <div class="ghx-progressBar-status-component" style="background: ${colors.byStatus['CODE REVIEW']}; width: ${inCodeReviewWidth}px;"></div>
+          <div class="ghx-progressBar-status-component" style="background: ${colors.byStatus['PRODUCT REVIEW']}; width: ${productReviewWidth}px;"></div>
+          <div class="ghx-progressBar-status-component" style="background: ${colors.byStatus.DONE}; width: ${doneWidth}px;"></div>
         </div>
-        <span style="color: white;position: absolute;top: 20%;font-weight: 500;font-size: 12px;width: ${barWidth}px;text-align: center;">
+        <div style="margin: auto; color: white;position: absolute;top: 20%;font-weight: 500;font-size: 12px;width: ${barWidth}px;text-align: center;">
           ${totalTasks} Tasks / ${totalPoints} Points
-        </span>
+        </div>
     </div>`;
 
     return progressElem;
@@ -781,8 +782,48 @@ async function enhanceSprintBoard() {
       pointBreakdown,
       percentageBreakdown,
     });
-    return `<div id="${elementId}" style="width: 300px; position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: ${IS_PROGRESS_BAR_DROPDOWN_SHOWN ? 1 : 0}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
+
+    const byEpic = Utils.groupBy(issueData, 'epicName');
+
+    const epicWiseProgress = `${Object.keys(byEpic)
+      .map((key) => {
+        const issuesForEpic = byEpic[key];
+        const totalPointsForEpic = issuesForEpic.reduce(
+          (sum, issue) => sum + (issue.storyPoints || 0),
+          0,
+        );
+        const pointBreakdownForEpic = getStoryPointsBreakdown(issuesForEpic);
+        const percentageBreakdownForEpic = getStatusPercentageBreakdown(
+          pointBreakdownForEpic,
+          totalPointsForEpic,
+        );
+        return `<tr>
+        <td style="padding: 8px 0px;">${key || 'N/A'}</td>
+        <td style="text-align:right;">
+          <div style="float: right;" align="right">
+            ${getProgressBarComponentByStatus({
+              issueData: issuesForEpic,
+              barWidth: 150,
+              elementId: `${key}-epic-progressBar`,
+              percentageBreakdown: percentageBreakdownForEpic,
+              totalPoints: totalPointsForEpic,
+            })}
+          </div>
+        </td>
+      </tr>`;
+      })
+      .join(' ')}`;
+
+    const opacity = IS_PROGRESS_BAR_DROPDOWN_SHOWN ? 1 : 0;
+    return `<div id="${elementId}" style="width: 320px; position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: ${opacity}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
       ${labelTable}
+      <hr />
+      <div style="font-weight: 500">Epics</div>
+      <table style="width:100%">
+        <tbody>
+          ${epicWiseProgress}
+        </tbody>
+      </table>
     </div>`;
   }
 
