@@ -732,31 +732,31 @@ async function enhanceSprintBoard() {
         <td style="text-align: right;"></td>
       </tr>
       <tr style="${trStyle}">
-        <td style="text-align: left; font-weight: 500; color: ${colors.byStatus['TO DO']}">To Do</td>
+        <td style="text-align: left; font-weight: 600; color: ${colors.byStatus['TO DO']}">To Do</td>
         <td style="text-align: left;">${taskCountBreakdown.todo}</td>
         <td style="text-align: left;">${pointBreakdown.todoPoints}</td>
         <td style="text-align: right;">${percentageBreakdown.todo}%</td>
       </tr>
       <tr style="${trStyle}">
-        <td style="text-align: left; font-weight: 500; color: ${colors.byStatus['IN PROGRESS']}">In Progress</td>
+        <td style="text-align: left; font-weight: 600; color: ${colors.byStatus['IN PROGRESS']}">In Progress</td>
         <td style="text-align: left;">${taskCountBreakdown.inProgress}</td>
         <td style="text-align: left;">${pointBreakdown.inProgressPoints}</td>
         <td style="text-align: right;">${percentageBreakdown.inProgress}%</td>
       </tr>
       <tr style="${trStyle}">
-        <td style="text-align: left; font-weight: 500; color: ${colors.byStatus['CODE REVIEW']}">Code Review</td>
+        <td style="text-align: left; font-weight: 600; color: ${colors.byStatus['CODE REVIEW']}">Code Review</td>
         <td style="text-align: left;">${taskCountBreakdown.codeReview}</td>
         <td style="text-align: left;">${pointBreakdown.inCodeReviewPoints}</td>
         <td style="text-align: right;">${percentageBreakdown.inCodeReview}%</td>
       </tr>
       <tr style="${trStyle}">
-        <td style="text-align: left; font-weight: 500; color: ${colors.byStatus['PRODUCT REVIEW']}">Product Review</td>
+        <td style="text-align: left; font-weight: 600; color: ${colors.byStatus['PRODUCT REVIEW']}">Product Review</td>
         <td style="text-align: left;">${taskCountBreakdown.productReview}</td>
         <td style="text-align: left;">${pointBreakdown.productReviewPoints}</td>
         <td style="text-align: right;">${percentageBreakdown.inProductReview}%</td>
       </tr>
       <tr style="height: 30px;">
-        <td style="text-align: left; font-weight: 500; color: ${colors.byStatus['DONE']}">Done</td>
+        <td style="text-align: left; font-weight: 600; color: ${colors.byStatus['DONE']}">Done</td>
         <td style="text-align: left;">${taskCountBreakdown.done}</td>
         <td style="text-align: left;">${pointBreakdown.donePoints}</td>
         <td style="text-align: right;">${percentageBreakdown.isDone}%</td>
@@ -765,24 +765,7 @@ async function enhanceSprintBoard() {
     return labelTable;
   }
 
-  function getProgressBarHoverElement({
-    issueData,
-    totalPoints,
-    taskCountBreakdown,
-    pointBreakdown,
-    percentageBreakdown,
-    elementId,
-  }) {
-    const taskCount = issueData.length;
-
-    const labelTable = getPointWiseStatsTable({
-      taskCount,
-      totalPoints,
-      taskCountBreakdown,
-      pointBreakdown,
-      percentageBreakdown,
-    });
-
+  function getEpicWiseProgressBars({ issueData }) {
     const byEpic = Utils.groupBy(issueData, 'epicName');
 
     const epicWiseProgress = `${Object.keys(byEpic)
@@ -814,16 +797,41 @@ async function enhanceSprintBoard() {
       })
       .join(' ')}`;
 
+    return `<table style="width:100%">
+      <tbody>
+        ${epicWiseProgress}
+      </tbody>
+    </table>`;
+  }
+
+  function getProgressBarHoverElement({
+    issueData,
+    totalPoints,
+    taskCountBreakdown,
+    pointBreakdown,
+    percentageBreakdown,
+    elementId,
+  }) {
+    const taskCount = issueData.length;
+
+    const labelTable = getPointWiseStatsTable({
+      taskCount,
+      totalPoints,
+      taskCountBreakdown,
+      pointBreakdown,
+      percentageBreakdown,
+    });
+
+    const epicProgressBars = getEpicWiseProgressBars({
+      issueData,
+    });
+
     const opacity = IS_PROGRESS_BAR_DROPDOWN_SHOWN ? 1 : 0;
     return `<div id="${elementId}" style="width: 320px; position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: ${opacity}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
       ${labelTable}
       <hr />
       <div style="font-weight: 500">Epics</div>
-      <table style="width:100%">
-        <tbody>
-          ${epicWiseProgress}
-        </tbody>
-      </table>
+      ${epicProgressBars}
     </div>`;
   }
 
