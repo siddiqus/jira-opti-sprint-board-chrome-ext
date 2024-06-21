@@ -15,7 +15,7 @@ async function run() {
 async function loop(fn) {
   setInterval(async () => {
     await fn();
-  }, 4000);
+  }, 3000);
 
   setTimeout(fn, 2000);
 }

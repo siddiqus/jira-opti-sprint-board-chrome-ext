@@ -1,5 +1,6 @@
 // eslint-disable-next-line
 var IS_PROGRESS_BAR_DROPDOWN_SHOWN = false;
+var localHashCache;
 
 async function enhanceSprintBoard() {
   const baseUrl = 'https://jira.sso.episerver.net';
@@ -1071,6 +1072,16 @@ async function enhanceSprintBoard() {
     await populateReviewerPairData(issueData);
   }
 
+  async function hashJson(jsonObject) {
+    const jsonString = JSON.stringify(jsonObject);
+    const encoder = new TextEncoder();
+    const data = encoder.encode(jsonString);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
+    return hashHex;
+  }
+
   async function run() {
     const boardUrl = getBoardUrl(baseUrl, rapidViewId);
 
@@ -1080,6 +1091,15 @@ async function enhanceSprintBoard() {
     } catch (error) {
       console.log('Failed fetching board data', error);
       return;
+    }
+
+    const hash = await hashJson(boardData);
+    if (localHashCache === hash) {
+      console.log('Skipping re-render, no change in data');
+      return;
+    } else {
+      console.log('board data updated')
+      localHashCache = hash;
     }
 
     const issueData = getMappedIssueData(boardData);
