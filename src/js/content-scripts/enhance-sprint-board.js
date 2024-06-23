@@ -62,7 +62,9 @@ async function enhanceSprintBoard() {
       const assignee = issue.assigneeName || 'Unassigned';
       const epicName = getEpicNameFromId(epics, issue.epicId);
 
-      const storyPoints = +issue.estimateStatistic.statFieldValue.value;
+      const storyPoints = issue.estimateStatistic
+        ? +issue.estimateStatistic.statFieldValue.value
+        : 0;
 
       const reviewers = getReviewersFromHtml(issue);
 
