@@ -666,6 +666,10 @@ async function enhanceSprintBoard() {
     const anchor = document.getElementById(anchorId);
     const floating = document.getElementById(dropdownId);
 
+    if (!anchor || !floating) {
+      return;
+    }
+
     // visible
     anchor.addEventListener('mouseenter', () => {
       floating.style.opacity = 1;
@@ -1100,7 +1104,7 @@ async function enhanceSprintBoard() {
       console.log('Skipping re-render, no change in data');
       return;
     } else {
-      console.log('board data updated')
+      console.log('board data updated');
       localHashCache = hash;
     }
 
