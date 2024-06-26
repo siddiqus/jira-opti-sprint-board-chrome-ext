@@ -672,13 +672,13 @@ async function enhanceSprintBoard() {
 
     // visible
     anchor.addEventListener('mouseenter', () => {
-      floating.style.opacity = 1;
+      floating.style.display = 'block';
       IS_PROGRESS_BAR_DROPDOWN_SHOWN = true;
     });
 
     // hidden
     anchor.addEventListener('mouseleave', () => {
-      floating.style.opacity = 0;
+      floating.style.display = 'none';
       IS_PROGRESS_BAR_DROPDOWN_SHOWN = false;
     });
   }
@@ -833,8 +833,8 @@ async function enhanceSprintBoard() {
       issueData,
     });
 
-    const opacity = IS_PROGRESS_BAR_DROPDOWN_SHOWN ? 1 : 0;
-    return `<div id="${elementId}" style="width: 320px; position: relative; background: white; z-index: 2000; top: 5px; transition: opacity 0.2s ease-in-out; opacity: ${opacity}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
+    const display = IS_PROGRESS_BAR_DROPDOWN_SHOWN ? 'block' : 'none';
+    return `<div id="${elementId}" style="width: 320px; position: relative; background: white; z-index: 2000; top: 5px; display: ${display}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
       ${labelTable}
       <hr />
       <div style="font-weight: 500">Epics</div>
