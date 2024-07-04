@@ -1016,11 +1016,16 @@ async function enhanceSprintBoard() {
 
     const peopleArray = getReviewerData(issueData); // all people
 
-    const availableReviewers = peopleArray.sort((a, b) => a.count - b.count);
+    const availableReviewers = peopleArray.sort((a, b) => {
+      if (a.count === b.count) {
+        return a.name - b.name;
+      }
+      return a.count - b.count;
+    });
 
     // Iterate through issues and assign potential reviewers
     const updatedIssueArray = inCodeReviewWithoutReviewer.map((issue, index) => {
-      const potentialReviewers = availableReviewers.filter((a) => a !== issue.assignee);
+      const potentialReviewers = availableReviewers.filter((a) => a.name !== issue.assignee);
 
       const wrappedIndex = index % potentialReviewers.length;
       const nextIndex = (wrappedIndex + 1) % potentialReviewers.length;
@@ -1085,7 +1090,10 @@ async function enhanceSprintBoard() {
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map((b) => b.toString(16).padStart(2, '0')).join('');
-    return hashHex;
+    return {
+      hash: hashHex,
+      time: Date.now(),
+    };
   }
 
   async function run() {
@@ -1099,13 +1107,20 @@ async function enhanceSprintBoard() {
       return;
     }
 
-    const hash = await hashJson(boardData);
-    if (localHashCache === hash) {
-      console.log('Skipping re-render, no change in data');
+    const hashData = await hashJson(boardData);
+
+    // check hash within 5 minutes
+    const hashTime = 1000 * 60 * 5; // 5 minutes
+    if (
+      localHashCache &&
+      localHashCache.hash === hashData.hash &&
+      Date.now() - hashData.time < hashTime
+    ) {
+      console.log('Skipping re-render, no change in data in 5 minutes');
       return;
     } else {
       console.log('board data updated');
-      localHashCache = hash;
+      localHashCache = hashData;
     }
 
     const issueData = getMappedIssueData(boardData);
