@@ -989,9 +989,9 @@ async function enhanceSprintBoard() {
 
     const html = `<div
   id="ghx-board-search-container"
-  style="position: absolute;top: 0;right: 20px;width: 196px;border: 1px solid lightgray;border-radius: 3px;padding: 8px 10px;z-index: 3000;background: white;"
+  style="position: absolute;top: 0;right: 20px;width: 120px;border: 1px solid lightgray;border-radius: 3px;padding: 8px 10px;z-index: 3000;background: white;"
 >
-  <input id="ghx-board-search-input" placeholder="Search here" spellcheck="false" style="border: none; border-radius: 3px; color: #666; width: 170px;"></input>
+  <input id="ghx-board-search-input" placeholder="Search here" spellcheck="false" style="border: none; border-radius: 3px; color: #666; width: 90px;"></input>
   <span id="ghx-board-search-icon" class="js-search-trigger ghx-iconfont aui-icon aui-icon-small aui-iconfont-search-small" style="position: absolute; right: 10px; top: 28%; color: #666; background: white;">
   </span>
 </div>`;
