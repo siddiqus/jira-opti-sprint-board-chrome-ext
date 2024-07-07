@@ -1132,6 +1132,10 @@ async function enhanceSprintBoard() {
     };
   }
 
+  function isRendered() {
+    return !!document.getElementById('ghx-custom-stats-wrapper');
+  }
+
   async function run() {
     const boardUrl = getBoardUrl(baseUrl, rapidViewId);
 
@@ -1150,7 +1154,8 @@ async function enhanceSprintBoard() {
     if (
       localHashCache &&
       localHashCache.hash === hashData.hash &&
-      Date.now() - hashData.time < hashTime
+      Date.now() - hashData.time < hashTime &&
+      isRendered()
     ) {
       console.log('Skipping re-render, no change in data in 5 minutes');
       return;
