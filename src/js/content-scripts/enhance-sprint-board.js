@@ -98,22 +98,58 @@ async function enhanceSprintBoard() {
   const getBoardUrl = (baseUrl, rapidViewId) =>
     `${baseUrl}/rest/greenhopper/1.0/xboard/work/allData.json?rapidViewId=${rapidViewId}`;
 
+  function getEffectiveHoursWithoutWeekend(timeInHours, currentDate = new Date()) {
+    const MS_IN_HOURS = 60 * 60 * 1000;
+    const WEEKEND_DAYS = [5, 6]; // friday saturday
+
+    if (timeInHours < 24) {
+      return timeInHours;
+    }
+
+    const startTime = new Date(currentDate.getTime() - timeInHours * MS_IN_HOURS);
+
+    const currentTime = new Date(currentDate);
+
+    let effectiveHours = timeInHours;
+
+    while (true) {
+      const currentDay = currentTime.getDay();
+      if (WEEKEND_DAYS.includes(currentDay) && currentDay !== startTime.getDay()) {
+        effectiveHours -= 24;
+      }
+
+      if (WEEKEND_DAYS.includes(currentDay) && currentDay === startTime.getDay()) {
+        effectiveHours -= 24 - startTime.getHours();
+      }
+
+      if (currentDay === startTime.getDay()) {
+        break;
+      }
+      currentTime.setDate(currentTime.getDate() - 1);
+    }
+
+    return Math.max(effectiveHours, 0);
+  }
+
   function getTimeElapsedHtmlElement(timeInHours) {
     if (!timeInHours) {
       return null;
     }
+
+    const effectiveHours = getEffectiveHoursWithoutWeekend(timeInHours);
+
     let color;
-    if (timeInHours < 24) {
+    if (effectiveHours < 24) {
       color = 'gray';
-    } else if (timeInHours < 48) {
+    } else if (effectiveHours < 48) {
       color = 'coral';
-    } else if (timeInHours < 72) {
+    } else if (effectiveHours < 72) {
       color = 'maroon';
     } else {
       color = 'red';
     }
 
-    const htmlString = `<div class='${TIME_ELAPSED_CLASS_NAME} aui-label' style="border-radius: 2em; color:${color};float: right;margin-left: 10px;margin-right: auto;"><b color="red"><span class="aui-icon aui-icon-small aui-iconfont-time"></span> ${timeInHours}h</b></div>`;
+    const htmlString = `<div class='${TIME_ELAPSED_CLASS_NAME} aui-label' style="border-radius: 2em; color:${color};float: right;margin-left: 10px;margin-right: auto;"><b color="red"><span class="aui-icon aui-icon-small aui-iconfont-time"></span> ${effectiveHours}h</b></div>`;
 
     return Utils.getHtmlFromString(htmlString);
   }
