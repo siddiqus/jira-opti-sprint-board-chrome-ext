@@ -1133,7 +1133,10 @@ async function enhanceSprintBoard() {
   }
 
   function isRendered() {
-    return !!document.getElementById('ghx-custom-stats-wrapper');
+    return Boolean(
+      document.getElementById('ghx-custom-stats-wrapper') ||
+        document.getElementById('ghx-sprint-progress-bar-container'),
+    );
   }
 
   async function run() {
