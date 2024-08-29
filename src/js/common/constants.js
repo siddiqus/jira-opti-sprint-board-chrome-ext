@@ -11,10 +11,10 @@ const colors = {
   byStatus: {
     'TO DO': '#42526e',
     'IN PROGRESS': '#3ea9ff',
-    'CODE REVIEW': '#1e88e5',
+    'CODE REVIEW': '#009688',
     'PEER REVIEW': '#1e88e5',
     'PRODUCT REVIEW': '#3f51b5',
-    DONE: '#4caf50',
+    DONE: '#4dbc52',
   },
 };
 
