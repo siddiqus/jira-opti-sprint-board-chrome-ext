@@ -1,5 +1,8 @@
 // eslint-disable-next-line
-var IS_PROGRESS_BAR_DROPDOWN_SHOWN = false;
+var visiblePopups = {
+  progressBar: false,
+  statsButton: false,
+};
 var localHashCache;
 
 async function enhanceSprintBoard() {
@@ -591,7 +594,7 @@ async function enhanceSprintBoard() {
 
       columnStatus = sanitizeProductReviewHeading(columnStatus);
 
-      const statusColor = colors.byStatus[columnStatus];
+      const statusColor = getStatusColor(columnStatus);
 
       headerElement.style.borderBottom = `4px solid ${statusColor}`;
 
@@ -697,7 +700,7 @@ async function enhanceSprintBoard() {
     };
   }
 
-  function enableHover(anchorId, dropdownId) {
+  function enableHover(anchorId, dropdownId, shownVar) {
     // hover behavior
     const anchor = document.getElementById(anchorId);
     const floating = document.getElementById(dropdownId);
@@ -709,13 +712,14 @@ async function enhanceSprintBoard() {
     // visible
     anchor.addEventListener('mouseenter', () => {
       floating.style.display = 'block';
-      IS_PROGRESS_BAR_DROPDOWN_SHOWN = true;
+      visiblePopups[shownVar] = true;
     });
 
     // hidden
     anchor.addEventListener('mouseleave', () => {
       floating.style.display = 'none';
-      IS_PROGRESS_BAR_DROPDOWN_SHOWN = false;
+      shownVar = false;
+      visiblePopups[shownVar] = false;
     });
   }
 
@@ -739,11 +743,11 @@ async function enhanceSprintBoard() {
 
     const progressElem = `<div id="${elementId}" style="position: relative;">
         <div style="height: ${height}px; width: ${barWidth}px; border: 1px solid gray; border-radius: 3px; display: grid; grid-template-columns: ${todoWidth}px ${inProgressWidth}px ${inCodeReviewWidth}px ${productReviewWidth}px ${doneWidth}px;">
-          <div class="ghx-progressBar-status-component" style="background: ${colors.byStatus['TO DO']}; width: ${todoWidth}px;"> </div>
-          <div class="ghx-progressBar-status-component" style="background: ${colors.byStatus['IN PROGRESS']}; width: ${inProgressWidth}px;"></div>
-          <div class="ghx-progressBar-status-component" style="background: ${colors.byStatus['CODE REVIEW']}; width: ${inCodeReviewWidth}px;"></div>
-          <div class="ghx-progressBar-status-component" style="background: ${colors.byStatus['PRODUCT REVIEW']}; width: ${productReviewWidth}px;"></div>
-          <div class="ghx-progressBar-status-component" style="background: ${colors.byStatus.DONE}; width: ${doneWidth}px;"></div>
+          <div class="ghx-progressBar-status-component" style="background: ${getStatusColor(STATUSES.TODO)}; width: ${todoWidth}px;"> </div>
+          <div class="ghx-progressBar-status-component" style="background: ${getStatusColor(STATUSES.IN_PROGRESS)}; width: ${inProgressWidth}px;"></div>
+          <div class="ghx-progressBar-status-component" style="background: ${getStatusColor(STATUSES.CODE_REVIEW)}; width: ${inCodeReviewWidth}px;"></div>
+          <div class="ghx-progressBar-status-component" style="background: ${getStatusColor(STATUSES.PRODUCT_REVIEW)}; width: ${productReviewWidth}px;"></div>
+          <div class="ghx-progressBar-status-component" style="background: ${getStatusColor(STATUSES.DONE)}; width: ${doneWidth}px;"></div>
         </div>
         <div style="margin: auto; color: white;position: absolute;top: 20%;font-weight: 500;font-size: 12px;width: ${barWidth}px;text-align: center;">
           ${totalTasks} Tasks / ${totalPoints} Points
@@ -775,31 +779,31 @@ async function enhanceSprintBoard() {
         <td style="text-align: right;"></td>
       </tr>
       <tr style="${trStyle}">
-        <td style="text-align: left; font-weight: 600; color: ${colors.byStatus['TO DO']}">To Do</td>
+        <td style="text-align: left; font-weight: 600; color: ${getStatusColor('TO DO')}">To Do</td>
         <td style="text-align: left;">${taskCountBreakdown.todo}</td>
         <td style="text-align: left;">${pointBreakdown.todoPoints}</td>
         <td style="text-align: right;">${percentageBreakdown.todo}%</td>
       </tr>
       <tr style="${trStyle}">
-        <td style="text-align: left; font-weight: 600; color: ${colors.byStatus['IN PROGRESS']}">In Progress</td>
+        <td style="text-align: left; font-weight: 600; color: ${getStatusColor('IN PROGRESS')}">In Progress</td>
         <td style="text-align: left;">${taskCountBreakdown.inProgress}</td>
         <td style="text-align: left;">${pointBreakdown.inProgressPoints}</td>
         <td style="text-align: right;">${percentageBreakdown.inProgress}%</td>
       </tr>
       <tr style="${trStyle}">
-        <td style="text-align: left; font-weight: 600; color: ${colors.byStatus['CODE REVIEW']}">Code Review</td>
+        <td style="text-align: left; font-weight: 600; color: ${getStatusColor('CODE REVIEW')}">Code Review</td>
         <td style="text-align: left;">${taskCountBreakdown.codeReview}</td>
         <td style="text-align: left;">${pointBreakdown.inCodeReviewPoints}</td>
         <td style="text-align: right;">${percentageBreakdown.inCodeReview}%</td>
       </tr>
       <tr style="${trStyle}">
-        <td style="text-align: left; font-weight: 600; color: ${colors.byStatus['PRODUCT REVIEW']}">Product Review</td>
+        <td style="text-align: left; font-weight: 600; color: ${getStatusColor('PRODUCT REVIEW')}">Product Review</td>
         <td style="text-align: left;">${taskCountBreakdown.productReview}</td>
         <td style="text-align: left;">${pointBreakdown.productReviewPoints}</td>
         <td style="text-align: right;">${percentageBreakdown.inProductReview}%</td>
       </tr>
       <tr style="height: 30px;">
-        <td style="text-align: left; font-weight: 600; color: ${colors.byStatus['DONE']}">Done</td>
+        <td style="text-align: left; font-weight: 600; color: ${getStatusColor('DONE')}">Done</td>
         <td style="text-align: left;">${taskCountBreakdown.done}</td>
         <td style="text-align: left;">${pointBreakdown.donePoints}</td>
         <td style="text-align: right;">${percentageBreakdown.isDone}%</td>
@@ -869,7 +873,7 @@ async function enhanceSprintBoard() {
       issueData,
     });
 
-    const display = IS_PROGRESS_BAR_DROPDOWN_SHOWN ? 'block' : 'none';
+    const display = visiblePopups.progressBar ? 'block' : 'none';
     return `<div id="${elementId}" style="width: 320px; position: relative; background: white; z-index: 2000; top: 5px; display: ${display}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
       ${labelTable}
       <hr />
@@ -926,7 +930,41 @@ async function enhanceSprintBoard() {
     }
 
     // hover behavior
-    enableHover(progressBarElementId, progressBarHoverComponentId);
+    enableHover(progressBarElementId, progressBarHoverComponentId, 'progressBar');
+  }
+
+  function renderStatsHoverButton(issueData) {
+    const parent = document.querySelector('.ghx-sprint-meta');
+
+    const elementId = 'ghx-stats-button-wrapper';
+    const elementContainerId = 'ghx-stats-button-container';
+
+    const barWidth = 40;
+
+    const hoverComponentId = 'ghx-stats-button-hoverComponent';
+
+    const display = visiblePopups.statsButton ? 'block' : 'none';
+    const popupHtml = `<div id="${hoverComponentId}" style="width: 320px; position: relative; background: white; z-index: 2000; top: 5px; display: ${display}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
+      hello there
+    </div>`;
+
+    const htmlString = `<div id="${elementContainerId}" style="background: white; float:left; margin-left: 10px; margin-right: 10px; width: ${barWidth}px; height: 26px; position: relative; display: inline-block; padding: 0px 5px;">
+      Click Here  
+    ${popupHtml}
+    </div>`;
+
+    const elementHtml = Utils.getHtmlFromString(htmlString);
+
+    const existingElem = document.getElementById(elementContainerId);
+    if (existingElem) {
+      existingElem.remove();
+    }
+    if (parent) {
+      parent.insertBefore(elementHtml, parent.firstChild);
+    }
+
+    // hover behavior
+    enableHover(elementId, hoverComponentId, 'statsButton');
   }
 
   function getReviewerPairs(issuesData) {
@@ -1139,6 +1177,36 @@ async function enhanceSprintBoard() {
     );
   }
 
+  function getTeamMemberSummary(issueData) {
+    const summary = {};
+
+    issueData.forEach((task) => {
+      const assignee = task.assignee;
+      const status = getNormalizedStatus(task.status);
+
+      if (!summary[assignee]) {
+        summary[assignee] = {
+          [STATUSES.TODO]: { points: 0, tasks: 0 },
+          [STATUSES.IN_PROGRESS]: { points: 0, tasks: 0 },
+          [STATUSES.CODE_REVIEW]: { points: 0, tasks: 0 },
+          [STATUSES.PRODUCT_REVIEW]: { points: 0, tasks: 0 },
+          [STATUSES.DONE]: { points: 0, tasks: 0 },
+          Summary: { points: 0, tasks: 0 },
+        };
+      }
+
+      if (Object.values(STATUSES).includes(status)) {
+        summary[assignee][status].points += task.storyPoints;
+        summary[assignee][status].tasks += 1;
+        summary[assignee]['Summary'].points += task.storyPoints;
+        summary[assignee]['Summary'].tasks += 1;
+      } else {
+        console.error(`status ${status} is not included in the status list`);
+      }
+    });
+    return summary;
+  }
+
   async function run() {
     const boardUrl = getBoardUrl(baseUrl, rapidViewId);
 
@@ -1186,6 +1254,8 @@ async function enhanceSprintBoard() {
     renderReviewerSuggestions(issueData);
 
     await renderStats(issueData);
+
+    // renderStatsHoverButton(issueData);
 
     initSprintFilters();
   }

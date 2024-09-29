@@ -7,14 +7,23 @@ const TIME_ELAPSED_CLASS_NAME = 'ghx-issue-time-elapsed';
 // eslint-disable-next-line
 const HEADER_STATS_FONT_SIZE = '11px';
 
+const STATUSES = {
+  TODO: 'to do',
+  IN_PROGRESS: 'in progress',
+  CODE_REVIEW: 'code review',
+  PEER_REVIEW: 'peer review',
+  PRODUCT_REVIEW: 'product review',
+  DONE: 'done',
+};
+
 const colors = {
   byStatus: {
-    'TO DO': '#42526e',
-    'IN PROGRESS': '#3ea9ff',
-    'CODE REVIEW': '#009688',
-    'PEER REVIEW': '#009688',
-    'PRODUCT REVIEW': '#3f51b5',
-    DONE: '#4dbc52',
+    [STATUSES.TODO]: '#42526e',
+    [STATUSES.IN_PROGRESS]: '#3ea9ff',
+    [STATUSES.CODE_REVIEW]: '#009688',
+    [STATUSES.PEER_REVIEW]: '#009688',
+    [STATUSES.PRODUCT_REVIEW]: '#3f51b5',
+    [STATUSES.DONE]: '#4dbc52',
   },
 };
 

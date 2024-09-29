@@ -97,3 +97,15 @@ function isReports() {
   const html = document.getElementById('ghx-report').innerHTML;
   return html !== '';
 }
+
+function getNormalizedStatus(statusString) {
+  if ([STATUSES.CODE_REVIEW, STATUSES.PEER_REVIEW].includes(statusString.toLowerCase())) {
+    return STATUSES.CODE_REVIEW;
+  }
+
+  return statusString.toLowerCase();
+}
+
+function getStatusColor(statusString) {
+  return colors.byStatus[getNormalizedStatus(statusString)];
+}
