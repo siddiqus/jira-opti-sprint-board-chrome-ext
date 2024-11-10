@@ -874,7 +874,7 @@ async function enhanceSprintBoard() {
     });
 
     const display = visiblePopups.progressBar ? 'block' : 'none';
-    return `<div id="${elementId}" style="width: 320px; position: relative; background: white; z-index: 2000; top: 5px; display: ${display}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
+    return `<div id="${elementId}" style="width: 320px; position: relative; background: white; z-index: 2000; display: ${display}; border: 1px solid lightgray; border-radius: 5px; padding: 5px 10px;">  
       ${labelTable}
       <hr />
       <div style="font-weight: 500">Epics</div>
@@ -909,6 +909,7 @@ async function enhanceSprintBoard() {
     const progressBarHoverComponentId = 'ghx-progressBar-hoverComponent';
     const progressBarHtmlString = `<div id="${progressBarContainerId}" style="background: white; float:left; margin-left: 10px; margin-right: 10px; width: ${barWidth}px; height: 26px; position: relative; display: inline-block; padding: 0px 5px;">
       ${progressElem}
+      <div style="height: 5px;"></div>
       ${getProgressBarHoverElement({
         elementId: progressBarHoverComponentId,
         issueData,
@@ -930,7 +931,7 @@ async function enhanceSprintBoard() {
     }
 
     // hover behavior
-    enableHover(progressBarElementId, progressBarHoverComponentId, 'progressBar');
+    enableHover(progressBarContainerId, progressBarHoverComponentId, 'progressBar');
   }
 
   function renderStatsHoverButton(issueData) {
