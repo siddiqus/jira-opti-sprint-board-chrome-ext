@@ -59,6 +59,74 @@ const Utils = {
   toFixed: (number, decimals = 2) => {
     return +Number(number).toFixed(decimals);
   },
+
+  // copySelectionToClipboard() {
+  //   const selection = window.getSelection();
+
+  //   // Check if there's any selection
+  //   if (!selection.rangeCount) {
+  //     console.log('No text selected.');
+  //     return;
+  //   }
+
+  //   // Get the selected content as an HTML string
+  //   const selectedContent = selection.getRangeAt(0).cloneContents();
+
+  //   const clipboardItem = new ClipboardItem({
+  //     'text/plain': new Blob([selectedContent.innerText], { type: 'text/plain' }),
+  //     'text/html': new Blob([selectedContent.outerHTML], { type: 'text/html' }),
+  //   });
+
+  //   // // Create a ClipboardItem with the HTML MIME type
+  //   // const clipboardItem = new ClipboardItem({ 'text/html': htmlBlob });
+
+  //   // Write the ClipboardItem to the clipboard
+  //   navigator.clipboard
+  //     .write([clipboardItem])
+  //     .then(() => {
+  //       console.log('HTML content copied to clipboard!');
+  //       alert('HTML content copied to clipboard!');
+  //     })
+  //     .catch((err) => {
+  //       console.error('Failed to copy HTML content to clipboard:', err);
+  //     });
+  // },
+  copyContents(divId) {
+    const richTextDiv = document.getElementById(divId);
+    const clipboardItem = new ClipboardItem({
+      'text/plain': new Blob([richTextDiv.innerText], { type: 'text/plain' }),
+      'text/html': new Blob([richTextDiv.outerHTML], { type: 'text/html' }),
+    });
+
+    navigator.clipboard
+      .write([clipboardItem])
+      .then(() => {
+        console.log('HTML content copied to clipboard!');
+        alert('HTML content copied to clipboard!');
+      })
+      .catch((err) => {
+        console.error('Failed to copy HTML content to clipboard:', err);
+      });
+  },
+  selectAllContentWithinDiv(divId) {
+    // Get the div element by its ID
+    const div = document.getElementById(divId);
+
+    // Create a range object
+    const range = document.createRange();
+
+    // Select all contents within the div
+    range.selectNodeContents(div);
+
+    // Get the selection object
+    const selection = window.getSelection();
+
+    // Remove any current selection (to ensure the selection starts fresh)
+    selection.removeAllRanges();
+
+    // Add the new range to the selection
+    selection.addRange(range);
+  },
 };
 
 function clearSprintSearchBar() {

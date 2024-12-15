@@ -37,7 +37,7 @@ function attachCustomPopupHtml() {
       <div id="custom-popup-content-container"
           style="width: 55%; height: 60%; position: fixed; border: 1px solid #999; top: 20%; z-index: 13; left: 20%; background: white; border-radius: 3px; padding: 4em; box-shadow: 0px 6px 10px 0px rgba(0, 0, 0, .3);"
       >
-        <div style="overflow: scroll; height: -webkit-fill-available; padding: 2em;background-color: #f7f7f7;" id="${CUSTOM_POUP_CONTENT_DIV_ID}"></div>
+        <div style="position: relative; overflow: scroll; height: -webkit-fill-available; padding: 2em;background-color: #f7f7f7;" id="${CUSTOM_POUP_CONTENT_DIV_ID}"></div>
         <div
           id="${CUSTOM_POPUP_CLOSE_BUTTON}"
           class="ghx-iconfont aui-icon aui-icon-small aui-iconfont-remove"

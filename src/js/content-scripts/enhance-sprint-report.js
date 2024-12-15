@@ -123,12 +123,22 @@ function getPresentableSprintReportHtml() {
   );
 
   const html = `<div>
-    <h3>Completed</h3>
-    ${completedTableUl}
-    <h3>Not Completed</h3>
-    ${notCompletedTableUl}
+    <div id="ghx-sprint-demo-report-cc" style="position: absolute;top: 20px;right: 20px;border: 1px solid lightgray;padding: 5px 8px;color: #444;border-radius: 3px;cursor: pointer; font-size: 12px;">Copy to Clipboard</div>
+    <div id="ghx-sprint-demo-report-content">
+        <h3>Completed</h3>
+        ${completedTableUl}
+        <h3>Not Completed</h3>
+        ${notCompletedTableUl}
+    </div>
   </div>`;
-  return Utils.getHtmlFromString(html);
+
+  const node = Utils.getHtmlFromString(html);
+
+  node.querySelector('#ghx-sprint-demo-report-cc').addEventListener('click', () => {
+    Utils.copyContents('ghx-sprint-demo-report-content');
+  });
+
+  return node;
 }
 
 const BUTTON_ID = 'ghx-show-sprint-demo-report-btn';
