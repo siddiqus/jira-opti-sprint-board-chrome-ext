@@ -52,6 +52,9 @@ const Utils = {
   insertAfter: (referenceNode, newNode) => {
     referenceNode.parentNode.insertBefore(newNode, referenceNode.nextSibling);
   },
+  prepend: (parentNode, newNode) => {
+    parentNode.insertBefore(newNode, parentNode.firstChild);
+  },
 
   toFixed: (number, decimals = 2) => {
     return +Number(number).toFixed(decimals);
@@ -79,6 +82,14 @@ function clearSprintEnhancements() {
 
 function isSprintBoard() {
   const html = document.getElementById('ghx-work');
+  if (!html) {
+    return false;
+  }
+  return html.innerHTML !== '';
+}
+
+function isSprintReport() {
+  const html = document.getElementById('ghx-report');
   if (!html) {
     return false;
   }

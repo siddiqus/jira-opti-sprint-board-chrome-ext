@@ -1219,21 +1219,21 @@ async function enhanceSprintBoard() {
       return;
     }
 
-    const hashData = await hashJson(boardData);
+    // const hashData = await hashJson(boardData);
 
     // check hash within 5 minutes
-    const hashTime = 1000 * 60 * 5; // 5 minutes
+    // const hashTime = 1000 * 60 * 5; // 5 minutes
     if (
-      localHashCache &&
-      localHashCache.hash === hashData.hash &&
-      Date.now() - hashData.time < hashTime &&
+      // localHashCache &&
+      // localHashCache.hash === hashData.hash &&
+      // Date.now() - hashData.time < hashTime &&
       isRendered()
     ) {
       console.log('Skipping re-render, no change in data in 5 minutes');
       return;
     } else {
       console.log('board data updated');
-      localHashCache = hashData;
+      // localHashCache = hashData;
     }
 
     const issueData = getMappedIssueData(boardData);

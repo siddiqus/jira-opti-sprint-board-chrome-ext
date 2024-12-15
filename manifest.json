@@ -24,6 +24,7 @@
         "src/js/content-scripts/sprint-search.js",
         "src/js/content-scripts/enhance-sprint-board.js",
         "src/js/content-scripts/enhance-backlog.js",
+        "src/js/content-scripts/enhance-sprint-report.js",
         "src/js/run.js"
       ],
       "all_frames": false,
