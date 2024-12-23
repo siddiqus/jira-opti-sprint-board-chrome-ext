@@ -718,7 +718,6 @@ async function enhanceSprintBoard() {
     // hidden
     anchor.addEventListener('mouseleave', () => {
       floating.style.display = 'none';
-      shownVar = false;
       visiblePopups[shownVar] = false;
     });
   }
