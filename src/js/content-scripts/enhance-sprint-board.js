@@ -603,7 +603,7 @@ async function enhanceSprintBoard() {
 
       const pointPercentage = Utils.toFixed((100 * statusPoints) / totalPoints);
       const html = Utils.getHtmlFromString(
-        `<span><span style="color: ${statusColor}">${columnStatus} (${statusCount || 0} Tasks, ${statusPoints} Points, ${pointPercentage}%)</span></span>`,
+        `<span><span style="color: ${statusColor}">${columnStatus} (${statusCount || 0} Tsk, ${statusPoints} Pt, ${pointPercentage}%)</span></span>`,
       );
       headerTitleElem.innerHTML = html.innerHTML;
     });
