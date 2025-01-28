@@ -12,6 +12,7 @@ const STATUSES = {
   IN_PROGRESS: 'in progress',
   CODE_REVIEW: 'code review',
   PEER_REVIEW: 'peer review',
+  REVIEW: 'review',
   PRODUCT_REVIEW: 'product review',
   DONE: 'done',
 };
@@ -22,6 +23,7 @@ const colors = {
     [STATUSES.IN_PROGRESS]: '#3ea9ff',
     [STATUSES.CODE_REVIEW]: '#009688',
     [STATUSES.PEER_REVIEW]: '#009688',
+    [STATUSES.REVIEW]: '#009688',
     [STATUSES.PRODUCT_REVIEW]: '#3f51b5',
     [STATUSES.DONE]: '#4dbc52',
   },

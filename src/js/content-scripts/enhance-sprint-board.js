@@ -624,7 +624,7 @@ async function enhanceSprintBoard() {
         todoPoints += storyPoints;
       } else if (issue.status.toLowerCase() === 'in progress') {
         inProgressPoints += storyPoints;
-      } else if (['code review', 'peer review', 'pr review'].includes(issue.status.toLowerCase())) {
+      } else if (isInReviewStatus(issue)) {
         inCodeReviewPoints += storyPoints;
       } else if (issue.status.toLowerCase() === 'product review') {
         productReviewPoints += storyPoints;
@@ -1082,10 +1082,7 @@ async function enhanceSprintBoard() {
 
   function getReviewerSuggestions(issueData) {
     const inCodeReviewWithoutReviewer = issueData.filter(
-      (i) =>
-        (i.status.toLowerCase().includes('code review') ||
-          i.status.toLowerCase().includes('peer review')) &&
-        !(i.reviewers || []).length,
+      (i) => isInReviewStatus(i) && !(i.reviewers || []).length,
     );
 
     const peopleArray = getReviewerData(issueData); // all people

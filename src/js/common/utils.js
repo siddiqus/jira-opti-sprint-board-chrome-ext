@@ -177,14 +177,22 @@ function isReports() {
   return html !== '';
 }
 
+function getStatusColor(statusString) {
+  return colors.byStatus[getNormalizedStatus(statusString)];
+}
+
+function isReviewStatus(statusString) {
+  return ['code review', 'peer review', 'pr review', 'review'].includes(statusString.toLowerCase());
+}
+
+function isInReviewStatus(issue) {
+  return isReviewStatus(issue.status.toLowerCase());
+}
+
 function getNormalizedStatus(statusString) {
-  if ([STATUSES.CODE_REVIEW, STATUSES.PEER_REVIEW].includes(statusString.toLowerCase())) {
+  if (isReviewStatus(statusString)) {
     return STATUSES.CODE_REVIEW;
   }
 
   return statusString.toLowerCase();
-}
-
-function getStatusColor(statusString) {
-  return colors.byStatus[getNormalizedStatus(statusString)];
 }

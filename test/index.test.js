@@ -13,7 +13,12 @@ function getEffectiveHoursWithoutWeekend(timeInHours, currentDate = new Date()) 
   let effectiveHours = timeInHours;
 
   while (true) {
+    if (currentTime.getDate() < startTime.getDate()) {
+      break;
+    }
+
     const currentDay = currentTime.getDay();
+
     if (WEEKEND_DAYS.includes(currentDay) && currentDay !== startTime.getDay()) {
       effectiveHours -= 24;
     }
@@ -22,9 +27,6 @@ function getEffectiveHoursWithoutWeekend(timeInHours, currentDate = new Date()) 
       effectiveHours -= 24 - startTime.getHours();
     }
 
-    if (currentDay === startTime.getDay()) {
-      break;
-    }
     currentTime.setDate(currentTime.getDate() - 1);
   }
 
@@ -77,5 +79,20 @@ describe('tests', () => {
     const hours = getEffectiveHoursWithoutWeekend(44, currentDate);
     const expected = 0;
     expect(hours).toEqual(expected);
+  });
+
+  it('start on tuesday 19th nov 10 am, now it is tuesday 3rd December 10 am', () => {
+    const currentDate = new Date(2024, 6, 13);
+    currentDate.setHours(14);
+
+    const start = new Date('2024-11-19 10:00:00');
+    const end = new Date('2024-12-03 10:00:00');
+
+    const ms = end.getTime() - start.getTime();
+    const hours = Math.floor(ms / (1000 * 60 * 60));
+
+    const resultHours = getEffectiveHoursWithoutWeekend(hours, currentDate);
+    const expected = hours - 4 * 24;
+    expect(resultHours).toEqual(expected);
   });
 });
