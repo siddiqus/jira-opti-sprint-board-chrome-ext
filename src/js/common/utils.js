@@ -182,7 +182,9 @@ function getStatusColor(statusString) {
 }
 
 function isReviewStatus(statusString) {
-  return ['code review', 'peer review', 'pr review', 'review'].includes(statusString.toLowerCase());
+  return ['code review', 'peer review', 'pr review', 'review', 'in review'].includes(
+    statusString.toLowerCase(),
+  );
 }
 
 function isInReviewStatus(issue) {

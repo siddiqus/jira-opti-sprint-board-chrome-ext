@@ -601,7 +601,7 @@ async function enhanceSprintBoard() {
       const statusCount = statusCountMap[columnStatus] || 0;
       const statusPoints = +Number(pointsMap[columnStatus] || 0).toFixed(2);
 
-      const pointPercentage = Utils.toFixed((100 * statusPoints) / totalPoints);
+      const pointPercentage = totalPoints === 0 ? 0 : Utils.toFixed((100 * statusPoints) / totalPoints);
       const html = Utils.getHtmlFromString(
         `<span><span style="color: ${statusColor}">${columnStatus} (${statusCount || 0} Tsk, ${statusPoints} Pt, ${pointPercentage}%)</span></span>`,
       );
