@@ -16,6 +16,7 @@ const STATUSES = {
   IN_REVIEW: 'in review',
   PRODUCT_REVIEW: 'product review',
   DONE: 'done',
+  BLOCKED: 'blocked'
 };
 
 const colors = {
@@ -28,6 +29,7 @@ const colors = {
     [STATUSES.REVIEW]: '#009688',
     [STATUSES.PRODUCT_REVIEW]: '#3f51b5',
     [STATUSES.DONE]: '#4dbc52',
+    [STATUSES.BLOCKED]: '#c2185b'
   },
 };
 

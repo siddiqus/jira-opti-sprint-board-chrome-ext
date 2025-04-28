@@ -1232,7 +1232,20 @@ async function enhanceSprintBoard() {
     //   // localHashCache = hashData;
     // }
 
-    const issueData = getMappedIssueData(boardData);
+    while(true) {
+      const ticketItems = document.querySelectorAll('.ghx-issue-key-link')
+      if (ticketItems.length > 0) {
+        break
+      } else {
+        await Utils.delay(200)
+      }
+    }
+
+    let issueData = getMappedIssueData(boardData);
+
+    const issueKeysOnBoard = [...document.querySelectorAll('.ghx-issue-key-link')].map((i) => i.innerText.trim());
+
+    issueData = issueData.filter((i) => issueKeysOnBoard.includes(i.issueKey));
 
     if (!issueData.length) {
       return;
